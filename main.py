@@ -109,7 +109,7 @@ class Grille:
 					aligne = False
 			if aligne and last_char != 0:
 				return last_char
-		return False
+		return False 
 	
 	def initialiser_boutons(self):
 		n = self.n
@@ -214,18 +214,41 @@ class Jeu:
 				print(self.tour)
 				
 				self.tour_suivant()
-						
-			# On dessine la grille
+			#Menu
+			#pin		
+			menu = True
 			screen.fill(blanc)
-			self.grille.afficher_grille(self.jactuel)
+			text_selection = 'J1'
+			vert = (50, 132, 100)
+			rouge = (180, 32, 42)
+			selection = small_font.render(text_selection, False, noir)
+			selection_x = (l_ecran - font.size(text_selection )[0])/2
+			screen.blit(selection,(selection_x,0))
+			#affichage des symboles
+			
+			liste_symbole = [image_o,image_x,image_tri,image_dot]
+			n_symbole = len(liste_symbole)
+			gap = (l_ecran - n_symbole*image_size)/(n_symbole+1)
+			y_pos_symbole = (h_ecran-image_size)/2
+			liste_bouton = []
+			for n in range(n_symbole):
+				x_pos_symbole = (n+1)*gap+image_size*n
+				screen.blit(pygame.transform.scale(liste_symbole[n], image_res), (x_pos_symbole,y_pos_symbole))
+				liste_bouton.append(Bouton(1,(x_pos_symbole,y_pos_symbole),image_size))
+			
+			print(liste_bouton[0].est_clique(clic_gauche))
 
-			# Affichage du texte
-			text = ""
-			if victoire:
-				text = f"{victoire} a gagné!"
-				print(f"{victoire} a gagné!")
-			textsurface = small_font.render(text, False, (0, 0, 0))
-			screen.blit(textsurface,(0,0))
+            # On dessine la grille
+			if menu != True:
+				self.grille.afficher_grille(self.jactuel)
+				if victoire:
+					pass
+
+                # Affichage du texte
+				textsurface = small_font.render('Score : 5', False, (0, 0, 0))
+				screen.blit(textsurface,(0,0))
+            
+
 
 			# On affiche tout sur l'écran 
 			pygame.display.flip()
@@ -235,6 +258,7 @@ class Jeu:
 taille_ecran = l_ecran, h_ecran = 640, 480
 noir = (0, 0, 0)
 blanc = (255, 255, 255)
+
 pygame.display.set_caption("Morpion par Léo et Guillaume")
 screen = pygame.display.set_mode(taille_ecran)
 
