@@ -67,6 +67,22 @@ class Case:
 	def __str__(self):
 		return f"position : {self.pos}\nvaleur : {self.val}"
 
+class Cursor:
+	def __init__(self, pos):
+		self.pos = list(pos)
+		self.width = 0
+	
+	def draw(self, joueur):
+		w = image_size / 2
+		corners = ((0,0,w,w),(0,w,w,w),(w,0,w,w),(w,w,w,w))
+		offset = ((-1,-1),(-1,1),(1,-1),(1,1))
+		for i in range(4):
+			crop = corners[i]
+			ox, oy = offset[i]
+			dist = math.sin(pygame.time.get_ticks()/100) * 4 + 8 
+			dist += self.width
+			pos = (self.pos[0] + crop[0] + ox*dist, self.pos[1] + crop[1] + oy*dist)
+			screen.blit(pygame.transform.scale(joueur.image_curseur, image_res), pos, crop)
 
 class Grille:
 	def __init__(self, largeur):
@@ -74,8 +90,7 @@ class Grille:
 		self.table = [[0]* largeur for i in range(largeur)]
 		self.initialiser_boutons()
 		self.selection = None
-		self.pos_cursor = [-84, -84]
-		self.width_cursor = 0
+		self.cursor = Cursor([-84, -84])
 	
 	def initialiser_boutons(self):
 		n = self.n
@@ -142,16 +157,15 @@ class Grille:
 				if bouton.est_survole():
 					self.selection = bouton
 				if bouton.est_clique(clic_gauche) and self.est_vide(bouton.index): 
-					self.width_cursor = -8
+					self.cursor.width = -8
 					return bouton.index
 		return None
 
 	def animer_curseur(self, dt):
 		if self.selection:
-			self.pos_cursor[0] += ((self.selection.pos[0]) - self.pos_cursor[0]) * dt * 20
-			self.pos_cursor[1] += ((self.selection.pos[1]) - self.pos_cursor[1]) * dt * 20
-		self.width_cursor *= 0.9
-		print(self.width_cursor)
+			self.cursor.pos[0] += ((self.selection.pos[0]) - self.cursor.pos[0]) * dt * 20
+			self.cursor.pos[1] += ((self.selection.pos[1]) - self.cursor.pos[1]) * dt * 20
+		self.cursor.width *= 0.9
 
 	def afficher_grille(self, joueur):
 		# Grille
@@ -167,21 +181,13 @@ class Grille:
 				x, y = bouton.pos
 				x += bouton.offset[0]
 				y += bouton.offset[1]
-				if bouton.bou
+				if bouton.bounce:
+					y += math.sin(pygame.time.get_ticks()/100 + bouton.index[0]+bouton.index[1]) * 8
 				
 				screen.blit(pygame.transform.scale(image, image_res), (x, y))
 		# Afficher curseur
 		# TODO: sélparer curseur dans sa classe
-		w = image_size / 2
-		corners = ((0,0,w,w),(0,w,w,w),(w,0,w,w),(w,w,w,w))
-		offset = ((-1,-1),(-1,1),(1,-1),(1,1))
-		for i in range(4):
-			crop = corners[i]
-			ox, oy = offset[i]
-			dist = math.sin(pygame.time.get_ticks()/100) * 4 + 8 
-			dist += self.width_cursor
-			pos = (self.pos_cursor[0] + crop[0] + ox*dist, self.pos_cursor[1] + crop[1] + oy*dist)
-			screen.blit(pygame.transform.scale(joueur.image_curseur, image_res), pos, crop)
+		self.cursor.draw(joueur)
 
 
 class Jeu:
@@ -242,9 +248,9 @@ class Jeu:
 			# Affichage du texte
 			text = ""
 			if victoire:
-				text = f"{victoire} a gagné!"
-			textsurface = small_font.render(text, False, (0, 0, 0))
-			screen.blit(textsurface,(0,0))
+				text = f"{victoire} gagne!"
+			#textsurface = small_font.render(text, False, (0, 0, 0))
+			#screen.blit(textsurface,(0,0))
 
 			# On affiche tout sur l'écran 
 			pygame.display.flip()
@@ -275,8 +281,7 @@ clic_gauche = False
 
 # Initialisation du texte
 pygame.font.init() 
-small_font = pygame.font.Font('font/ReadexPro.ttf', 30)
-font = pygame.font.Font("font/ReadexPro.ttf", 32)
+small_font = pygame.font.Font('font/8-bit-hud.ttf', 30)
 
 # Initialisation du jeu
 j1 = Joueur("Léo", "x")
