@@ -58,7 +58,6 @@ class Bouton:
 		return False
 
 
-
 class Case:
 	def __init__(self, pos, val):
 		self.pos = pos
@@ -74,7 +73,8 @@ class Grille:
 		self.table = [[0]* largeur for i in range(largeur)]
 		self.initialiser_boutons()
 		self.selection = None
-		self.pos_cursor = [-64, -64]
+		self.pos_cursor = [-84, -84]
+		self.width_cursor = 0
 	
 	def est_vide(self, index):
 		return self.table[index[0]][index[1]] == 0
@@ -88,7 +88,7 @@ class Grille:
 			return self.table[index[0]][index[1]]
 		return self.table[index][j]
 	
-	def victoire(self):
+	def victoire(self, tour):
 		table = self.table
 		n = self.n
 		combinaisons = []
@@ -109,6 +109,8 @@ class Grille:
 					aligne = False
 			if aligne and last_char != 0:
 				return last_char
+		if tour >= n*n:
+			return "match nul"
 		return False
 	
 	def initialiser_boutons(self):
@@ -130,6 +132,7 @@ class Grille:
 				if bouton.est_survole():
 					self.selection = bouton
 				if bouton.est_clique(clic_gauche) and self.est_vide(bouton.index): 
+					self.width_cursor = -8
 					return bouton.index
 		return None
 
@@ -137,12 +140,14 @@ class Grille:
 		if self.selection:
 			self.pos_cursor[0] += ((self.selection.pos[0]) - self.pos_cursor[0]) * dt * 20
 			self.pos_cursor[1] += ((self.selection.pos[1]) - self.pos_cursor[1]) * dt * 20
+		self.width_cursor *= 0.9
+		print(self.width_cursor)
 
 	def afficher_grille(self, joueur):
 		# Grille
 		for ligne in self.boutons:
 			for bouton in ligne:
-				case = self.table[bouton.index[0]][bouton.index[1]]
+				case = self.valeur(bouton.index)
 				image = image_dot
 				if case == "x":
 					image = image_x
@@ -157,7 +162,8 @@ class Grille:
 		for i in range(4):
 			crop = corners[i]
 			ox, oy = offset[i]
-			dist = math.sin(pygame.time.get_ticks()/100) * 4 + 8
+			dist = math.sin(pygame.time.get_ticks()/100) * 4 + 8 
+			dist += self.width_cursor
 			pos = (self.pos_cursor[0] + crop[0] + ox*dist, self.pos_cursor[1] + crop[1] + oy*dist)
 			screen.blit(pygame.transform.scale(joueur.image_curseur, image_res), pos, crop)
 
@@ -165,8 +171,8 @@ class Grille:
 class Jeu:
 	def __init__(self, joueur1, joueur2):
 		self.joueurs = [joueur1, joueur2]
-		self.jactuel = self.joueurs[0]
-		self.jactuel_index = 0
+		self.jactuel_index = random.randint(0,1)
+		self.jactuel = self.joueurs[self.jactuel_index]
 		self.tour = 0
 
 		self.grille = Grille(3)
@@ -182,9 +188,7 @@ class Jeu:
 		self.jactuel = self.joueurs[self.jactuel_index]
 	
 	def match_nul(self):
-		if self.tour >= 9:
-			return True
-		return False
+		return self.tour >= 9
 		
 	def main(self):
 		prev_time = time.time()
@@ -210,7 +214,7 @@ class Jeu:
 
 			if choix:
 				self.grille.changer_val(choix[0], choix[1], self.jactuel.symb)
-				victoire = self.grille.victoire()
+				victoire = self.grille.victoire(self.tour)
 				print(self.tour)
 				
 				self.tour_suivant()
