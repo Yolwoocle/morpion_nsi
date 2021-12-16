@@ -1,0 +1,6 @@
+13.12.2021 :
+	Création des bases du jeu :
+		le jeu marche correctement
+		resultat sur la console
+		affichage du jeu sur une fenêtre 
+		
