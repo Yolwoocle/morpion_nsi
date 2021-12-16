@@ -31,9 +31,32 @@ class Joueur:
 			self.couleur2 = (33, 45, 72)
 			self.image_curseur = image_curseur
 
-	
 	def __str__(self):
 		f"nom: {self.nom} \n symbole: {self.symb}"
+
+class Bouton:
+	def __init__(self, index, pos, size):
+		self.index = index
+		self.pos = pos
+		self.size = size
+		self.offset = (0, 0)
+
+	def est_survole(self):
+		souris_x, souris_y = pygame.mouse.get_pos()
+		w = espace_entre_cases / 2
+		contact_x = self.pos[0] - w <= souris_x < self.pos[0] + self.size[0] + w
+		contact_y = self.pos[1] - w <= souris_y < self.pos[1] + self.size[1] + w
+		contact = contact_x and contact_y
+		self.survole = contact
+		return contact
+
+	def est_clique(self, clic_gauche):
+		bouton_x, bouton_y = self.pos[0], self.pos[1]
+		if self.survole:
+			if clic_gauche:
+				return True
+		return False
+
 
 
 class Case:
@@ -99,42 +122,44 @@ class Grille:
 		for i in range(n):
 			self.boutons.append([])
 			for j in range(n):
-				self.boutons[i].append({ "index": (i, j), "pos": (x + j*w, y + i*w) })
+				self.boutons[i].append(Bouton((i, j), (x + j*w, y + i*w), image_res))
 	
 	def interaction_boutons(self, clic_gauche):
-		souris_x, souris_y = pygame.mouse.get_pos()
 		for ligne in self.boutons:
 			for bouton in ligne:
-				bouton_x = bouton["pos"][0]
-				bouton_y = bouton["pos"][1]
-				w = espace_entre_cases / 2
-				contact_x = bouton_x - w <= souris_x < bouton_x + image_size + w
-				contact_y = bouton_y - w <= souris_y < bouton_y + image_size + w
-				if contact_x and contact_y:
+				if bouton.est_survole():
 					self.selection = bouton
-					if clic_gauche and self.est_vide(bouton["index"]):
-						return bouton["index"]
+				if bouton.est_clique(clic_gauche) and self.est_vide(bouton.index): 
+					return bouton.index
 		return None
 
 	def animer_curseur(self, dt):
 		if self.selection:
-			self.pos_cursor[0] += ((self.selection["pos"][0]) - self.pos_cursor[0]) * dt * 20
-			self.pos_cursor[1] += ((self.selection["pos"][1]) - self.pos_cursor[1]) * dt * 20
+			self.pos_cursor[0] += ((self.selection.pos[0]) - self.pos_cursor[0]) * dt * 20
+			self.pos_cursor[1] += ((self.selection.pos[1]) - self.pos_cursor[1]) * dt * 20
 
 	def afficher_grille(self, joueur):
 		# Grille
 		for ligne in self.boutons:
 			for bouton in ligne:
-				case = self.table[bouton["index"][0]][bouton["index"][1]]
+				case = self.table[bouton.index[0]][bouton.index[1]]
 				image = image_dot
 				if case == "x":
 					image = image_x
 				elif case == "o":
 					image = image_o
-				screen.blit(pygame.transform.scale(image, image_res), bouton["pos"])
+				screen.blit(pygame.transform.scale(image, image_res), bouton.pos)
 		# Afficher curseur
 		# TODO: 4 sprites curseur
-		screen.blit(pygame.transform.scale(joueur.image_curseur, image_res), self.pos_cursor)
+		w = image_size / 2
+		corners = ((0,0,w,w),(0,w,w,w),(w,0,w,w),(w,w,w,w))
+		offset = ((-1,-1),(-1,1),(1,-1),(1,1))
+		for i in range(4):
+			crop = corners[i]
+			ox, oy = offset[i]
+			dist = math.sin(pygame.time.get_ticks()/100) * 4 + 8
+			pos = (self.pos_cursor[0] + crop[0] + ox*dist, self.pos_cursor[1] + crop[1] + oy*dist)
+			screen.blit(pygame.transform.scale(joueur.image_curseur, image_res), pos, crop)
 
 
 class Jeu:
@@ -217,7 +242,6 @@ screen = pygame.display.set_mode(taille_ecran)
 image_curseur = pygame.image.load("images/cursor.png")
 image_curseur_o = pygame.image.load("images/cursor_o.png")
 image_curseur_x = pygame.image.load("images/cursor_x.png")
-images_curseur = [pygame.image.load(f"images/cu_{i}.png") for i in range(1, 5)]
 image_o = pygame.image.load("images/o.png")
 image_x = pygame.image.load("images/x.png")
 image_tri = pygame.image.load("images/tri.png")
@@ -244,4 +268,3 @@ pygame.font.init()
 clock = pygame.time.Clock()
 
 jeu.main()
-
