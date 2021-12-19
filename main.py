@@ -166,6 +166,9 @@ class Grille:
 		# TODO: 4 sprites curseur
 		coloriser(image_curseur, (205, 247, 226), joueur.couleur)
 		screen.blit(pygame.transform.scale(image_curseur, image_res), self.pos_cursor)
+  
+
+		
 
 
 class Jeu:
@@ -221,17 +224,29 @@ class Jeu:
 				print(self.tour)
 				
 				self.tour_suivant()
-						
-			# On dessine la grille
+			
+			menu = True
 			screen.fill(blanc)
-			self.grille.afficher_grille(self.jactuel)
-			if victoire:
-				pass
+   
+			text_selection = 'yolwoocle est un pd'
+			selection = small_font.render(text_selection, False, (0, 0, 0))
+			selection_x = (644 - font.size(text_selection )[0])/2
+			print(selection_x)
+			screen.blit(selection,(selection_x,0))
 
-			# Affichage du texte
-			textsurface = small_font.render('Score : 5', False, (0, 0, 0))
-			screen.blit(textsurface,(0,0))
 
+			# On dessine la grille
+			if menu != True:
+				self.grille.afficher_grille(self.jactuel)
+				if victoire:
+					pass
+
+				# Affichage du texte
+				textsurface = small_font.render('Score : 5', False, (0, 0, 0))
+				screen.blit(textsurface,(0,0))
+			
+   
+			
 			# On affiche tout sur l'écran 
 			pygame.display.flip()
 
@@ -283,6 +298,7 @@ grille = Grille(3)
 jeu = Jeu(j1, j2)
 pygame.font.init()
 clock = pygame.time.Clock()
+
 
 jeu.main()
 
