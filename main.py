@@ -203,6 +203,7 @@ class Jeu:
 		self.actif = True
 		self.menu = True
 		self.fin_selection = 0
+		self.ini = True
 
 	def joueur_actuel(self):
 		return self.jactuel
@@ -234,13 +235,17 @@ class Jeu:
 
             # On dessine la grille
 			if self.menu != True:
-				def __init__(self):
+				if self.ini == True:
+
+					self.test = True
 					self.jactuel_index = random.randint(0,1)
 					self.jactuel = self.joueurs[self.jactuel_index]
 					self.grille.afficher_grille(self.jactuel)
 					self.grille = Grille(3)
 					self.tour = 0
+					self.ini = False
 						# Limiter les FPS
+				print(self.jactuel_index)
 				clock.tick(60)
 				now = time.time()
 				dt = now - prev_time
