@@ -32,7 +32,7 @@ class Joueur:
 			self.image_curseur = image_curseur
 
 	def __str__(self):
-		f"nom: {self.nom} \n symbole: {self.symb}"
+		return f"nom: {self.nom} \n symbole: {self.symb}"
 
 class Bouton:
 	def __init__(self, index, pos, size):
@@ -40,6 +40,8 @@ class Bouton:
 		self.pos = pos
 		self.size = size
 		self.offset = (0, 0)
+		self.survole = False
+		self.bounce = False
 
 	def est_survole(self):
 		souris_x, souris_y = pygame.mouse.get_pos()
@@ -51,12 +53,10 @@ class Bouton:
 		return contact
 
 	def est_clique(self, clic_gauche):
-		bouton_x, bouton_y = self.pos[0], self.pos[1]
-		if self.survole:
+		if self.est_survole():
 			if clic_gauche:
 				return True
 		return False
-
 
 
 class Case:
@@ -74,8 +74,22 @@ class Grille:
 		self.table = [[0]* largeur for i in range(largeur)]
 		self.initialiser_boutons()
 		self.selection = None
-		self.pos_cursor = [-64, -64]
+		self.pos_cursor = [-84, -84]
+		self.width_cursor = 0
 	
+	def initialiser_boutons(self):
+		n = self.n
+		l_grille = n * image_size + (n-1) * espace_entre_cases
+		x = (l_ecran - l_grille) / 2
+		y = (h_ecran - l_grille) / 2
+		w = image_size + espace_entre_cases
+
+		self.boutons = []
+		for i in range(n):
+			self.boutons.append([])
+			for j in range(n):
+				self.boutons[i].append(Bouton((i, j), (x + j*w, y + i*w), image_res))
+
 	def est_vide(self, index):
 		return self.table[index[0]][index[1]] == 0
 
@@ -87,8 +101,13 @@ class Grille:
 		if j == None:
 			return self.table[index[0]][index[1]]
 		return self.table[index][j]
+
+	def lire_bouton(self, index, j=None):
+		if j == None:
+			return self.boutons[index[0]][index[1]]
+		return self.boutons[index][j]
 	
-	def victoire(self):
+	def victoire(self, tour):
 		table = self.table
 		n = self.n
 		combinaisons = []
@@ -108,21 +127,14 @@ class Grille:
 				if self.valeur(pos) != last_char:
 					aligne = False
 			if aligne and last_char != 0:
+				# En cas de victoire
+				for pos in comb:
+					self.lire_bouton(pos).bounce = True 
 				return last_char
-		return False 
-	
-	def initialiser_boutons(self):
-		n = self.n
-		l_grille = n * image_size + (n-1) * espace_entre_cases
-		x = (l_ecran - l_grille) / 2
-		y = (h_ecran - l_grille) / 2
-		w = image_size + espace_entre_cases
 
-		self.boutons = []
-		for i in range(n):
-			self.boutons.append([])
-			for j in range(n):
-				self.boutons[i].append(Bouton((i, j), (x + j*w, y + i*w), image_res))
+		if tour >= n*n:
+			return "match nul"
+		return False
 	
 	def interaction_boutons(self, clic_gauche):
 		for ligne in self.boutons:
@@ -130,6 +142,7 @@ class Grille:
 				if bouton.est_survole():
 					self.selection = bouton
 				if bouton.est_clique(clic_gauche) and self.est_vide(bouton.index): 
+					self.width_cursor = -8
 					return bouton.index
 		return None
 
@@ -137,27 +150,35 @@ class Grille:
 		if self.selection:
 			self.pos_cursor[0] += ((self.selection.pos[0]) - self.pos_cursor[0]) * dt * 20
 			self.pos_cursor[1] += ((self.selection.pos[1]) - self.pos_cursor[1]) * dt * 20
+		self.width_cursor *= 0.9
 
 	def afficher_grille(self, joueur):
 		# Grille
 		for ligne in self.boutons:
 			for bouton in ligne:
-				case = self.table[bouton.index[0]][bouton.index[1]]
+				case = self.valeur(bouton.index)
 				image = image_dot
 				if case == "x":
 					image = image_x
 				elif case == "o":
 					image = image_o
-				screen.blit(pygame.transform.scale(image, image_res), bouton.pos)
+				
+				x, y = bouton.pos
+				x += bouton.offset[0]
+				y += bouton.offset[1]
+
+				
+				screen.blit(pygame.transform.scale(image, image_res), (x, y))
 		# Afficher curseur
-		# TODO: 4 sprites curseur
+		# TODO: sélparer curseur dans sa classe
 		w = image_size / 2
 		corners = ((0,0,w,w),(0,w,w,w),(w,0,w,w),(w,w,w,w))
 		offset = ((-1,-1),(-1,1),(1,-1),(1,1))
 		for i in range(4):
 			crop = corners[i]
 			ox, oy = offset[i]
-			dist = math.sin(pygame.time.get_ticks()/100) * 4 + 8
+			dist = math.sin(pygame.time.get_ticks()/100) * 4 + 8 
+			dist += self.width_cursor
 			pos = (self.pos_cursor[0] + crop[0] + ox*dist, self.pos_cursor[1] + crop[1] + oy*dist)
 			screen.blit(pygame.transform.scale(joueur.image_curseur, image_res), pos, crop)
 
@@ -165,13 +186,15 @@ class Grille:
 class Jeu:
 	def __init__(self, joueur1, joueur2):
 		self.joueurs = [joueur1, joueur2]
-		self.jactuel = self.joueurs[0]
+		
 		self.jactuel_index = 0
+		self.jactuel = self.joueurs[0]
 		self.tour = 0
 
 		self.grille = Grille(3)
 		self.actif = True
 	
+
 	def joueur_actuel(self):
 		return self.jactuel
 
@@ -182,9 +205,7 @@ class Jeu:
 		self.jactuel = self.joueurs[self.jactuel_index]
 	
 	def match_nul(self):
-		if self.tour >= 9:
-			return True
-		return False
+		return self.tour >= 9
 		
 	def main(self):
 		prev_time = time.time()
@@ -210,36 +231,45 @@ class Jeu:
 
 			if choix:
 				self.grille.changer_val(choix[0], choix[1], self.jactuel.symb)
-				victoire = self.grille.victoire()
+				victoire = self.grille.victoire(self.tour)
 				print(self.tour)
-				
-				self.tour_suivant()
+				self.jactuel = self.joueurs[self.jactuel_index]
+
 			#Menu
-			#pin		
+				
 			menu = True
 			screen.fill(blanc)
-			text_selection = 'J1'
-			vert = (50, 132, 100)
-			rouge = (180, 32, 42)
+			text_selection = "J1"
 			selection = small_font.render(text_selection, False, noir)
 			selection_x = (l_ecran - font.size(text_selection )[0])/2
 			screen.blit(selection,(selection_x,0))
 			#affichage des symboles
 			
-			liste_symbole = [image_o,image_x,image_tri,image_dot]
-			n_symbole = len(liste_symbole)
 			gap = (l_ecran - n_symbole*image_size)/(n_symbole+1)
 			y_pos_symbole = (h_ecran-image_size)/2
 			liste_bouton = []
 			for n in range(n_symbole):
 				x_pos_symbole = (n+1)*gap+image_size*n
 				screen.blit(pygame.transform.scale(liste_symbole[n], image_res), (x_pos_symbole,y_pos_symbole))
-				liste_bouton.append(Bouton(1,(x_pos_symbole,y_pos_symbole),image_size))
-			
-			print(liste_bouton[0].est_clique(clic_gauche))
+				liste_bouton.append(Bouton(n,(x_pos_symbole,y_pos_symbole),image_res))
+				if liste_bouton[n].est_clique(clic_gauche):
+					print(liste_symbolestr[n])
+					self.jactuel.symb = liste_symbolestr[n]
+					print(self.jactuel)
+					self.jactuel = self.joueurs[(self.jactuel_index+1)]
+					print(self.jactuel)
+						
+						
+
+
+					
+
 
             # On dessine la grille
 			if menu != True:
+				def __init__(self):
+					self.jactuel_index = random.randint(0,1)
+					self.jactuel = self.joueurs[self.jactuel_index]
 				self.grille.afficher_grille(self.jactuel)
 				if victoire:
 					pass
@@ -249,6 +279,12 @@ class Jeu:
 				screen.blit(textsurface,(0,0))
             
 
+			# Affichage du texte
+			text = ""
+			if victoire:
+				text = f"{victoire} a gagné!"
+			textsurface = small_font.render(text, False, (0, 0, 0))
+			screen.blit(textsurface,(0,0))
 
 			# On affiche tout sur l'écran 
 			pygame.display.flip()
@@ -258,6 +294,8 @@ class Jeu:
 taille_ecran = l_ecran, h_ecran = 640, 480
 noir = (0, 0, 0)
 blanc = (255, 255, 255)
+vert = (50, 132, 100)
+rouge = (180, 32, 42)
 
 pygame.display.set_caption("Morpion par Léo et Guillaume")
 screen = pygame.display.set_mode(taille_ecran)
@@ -282,10 +320,15 @@ clic_gauche = False
 pygame.font.init() 
 small_font = pygame.font.Font('font/ReadexPro.ttf', 30)
 font = pygame.font.Font("font/ReadexPro.ttf", 32)
-
 # Initialisation du jeu
-j1 = Joueur("Léo", "x")
-j2 = Joueur("Guigui", "o")
+j1_name = "j1"
+j2_name = "j2"
+j1 = Joueur("j1", "x")
+j2 = Joueur("j2", "o")
+liste_joueur = ["j1","j2"]
+liste_symbole = [image_o,image_x,image_tri,image_dot]
+liste_symbolestr = ['o','x','tri','dot']
+n_symbole = len(liste_symbole)
 grille = Grille(3)
 jeu = Jeu(j1, j2)
 pygame.font.init()
