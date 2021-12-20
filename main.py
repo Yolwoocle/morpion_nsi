@@ -255,10 +255,6 @@ class Jeu:
 
 				if choix:
 					self.jactuel = self.joueurs[self.jactuel_index]
-					print("tour",self.tour)
-					print("index",self.jactuel_index)
-					print("jactuel",self.jactuel)
-					print(self.jactuel,"/",self.jactuel.symb)
 					self.grille.changer_val(choix[0], choix[1], self.jactuel.symb)
 					victoire = self.grille.victoire(self.tour)
 					self.tour_suivant()
