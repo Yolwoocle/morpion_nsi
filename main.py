@@ -58,7 +58,7 @@ class Bouton:
 				return True
 		return False
 
-###################### CASE ######################
+
 class Case:
 	def __init__(self, pos, val):
 		self.pos = pos
@@ -67,33 +67,23 @@ class Case:
 	def __str__(self):
 		return f"position : {self.pos}\nvaleur : {self.val}"
 
-###################### CURSOR ######################
 class Cursor:
 	def __init__(self, pos):
 		self.pos = list(pos)
 		self.width = 0
-		self.visible = True
-		self.anim_timer = 0
-
-	def animate(self, dt):
-		self.anim_timer += dt * 1000
-		self.width *= 0.9
-
+	
 	def draw(self, joueur):
-		if self.visible:
-			w = image_size / 2
-			corners = ((0,0,w,w),(0,w,w,w),(w,0,w,w),(w,w,w,w))
-			offset = ((-1,-1),(-1,1),(1,-1),(1,1))
-			for i in range(4):
-				crop = corners[i]
-				ox, oy = offset[i]
-				#dist = math.sin(pygame.time.get_ticks()/100) * 4 + 8 
-				dist = math.sin(self.anim_timer/100) * 4 + 8 
-				dist += self.width
-				pos = (self.pos[0] + crop[0] + ox*dist, self.pos[1] + crop[1] + oy*dist)
-				screen.blit(pygame.transform.scale(joueur.image_curseur, image_res), pos, crop)
+		w = image_size / 2
+		corners = ((0,0,w,w),(0,w,w,w),(w,0,w,w),(w,w,w,w))
+		offset = ((-1,-1),(-1,1),(1,-1),(1,1))
+		for i in range(4):
+			crop = corners[i]
+			ox, oy = offset[i]
+			dist = math.sin(pygame.time.get_ticks()/100) * 4 + 8 
+			dist += self.width
+			pos = (self.pos[0] + crop[0] + ox*dist, self.pos[1] + crop[1] + oy*dist)
+			screen.blit(pygame.transform.scale(joueur.image_curseur, image_res), pos, crop)
 
-################## GRILLE #####################
 class Grille:
 	def __init__(self, largeur):
 		self.n = largeur
@@ -168,16 +158,14 @@ class Grille:
 					self.selection = bouton
 				if bouton.est_clique(clic_gauche) and self.est_vide(bouton.index): 
 					self.cursor.width = -8
-					self.cursor.anim_timer = 0
 					return bouton.index
 		return None
 
 	def animer_curseur(self, dt):
-		self.cursor.animate(dt)
 		if self.selection:
 			self.cursor.pos[0] += ((self.selection.pos[0]) - self.cursor.pos[0]) * dt * 20
 			self.cursor.pos[1] += ((self.selection.pos[1]) - self.cursor.pos[1]) * dt * 20
-		
+		self.cursor.width *= 0.9
 
 	def afficher_grille(self, joueur):
 		# Grille
@@ -202,7 +190,7 @@ class Grille:
 		# TODO: sélparer curseur dans sa classe
 		self.cursor.draw(joueur)
 
-###################### JEU ######################
+
 class Jeu:
 	def __init__(self, joueur1, joueur2):
 		self.joueurs = [joueur1, joueur2]
@@ -211,7 +199,6 @@ class Jeu:
 		self.jactuel = self.joueurs[0]
 		self.tour = 1
 
-		self.game_over = False
 		self.grille = Grille(3)
 		self.actif = True
 		self.menu = True
@@ -245,10 +232,6 @@ class Jeu:
 					clic_gauche = True
 
 
-			choix = None
-			if not self.game_over:
-				choix = self.grille.interaction_boutons(clic_gauche)
-			self.grille.animer_curseur(dt) 
 
             # On dessine la grille
 			if self.menu != True:
@@ -272,6 +255,7 @@ class Jeu:
 
 				if choix:
 					self.jactuel = self.joueurs[self.jactuel_index]
+
 					self.grille.changer_val(choix[0], choix[1], self.jactuel.symb)
 					victoire = self.grille.victoire(self.tour)
 					self.tour_suivant()
@@ -280,15 +264,8 @@ class Jeu:
 	
 				screen.fill(blanc)
 
-			# Affichage du texte
-			text = ""
-			if victoire:
-				print(victoire)
-				self.grille.cursor.visible = False
-				self.game_over = True
-				text = f"{victoire} gagne!"
-			#textsurface = small_font.render(text, False, (0, 0, 0))
-			#screen.blit(textsurface,(0,0))
+				if victoire:
+					pass
 
                 # Affichage du texte
 				textsurface = small_font.render('Score : 5', False, (0, 0, 0))
