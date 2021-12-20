@@ -32,7 +32,7 @@ class Joueur:
 			self.image_curseur = image_curseur
 
 	def __str__(self):
-		f"nom: {self.nom} \n symbole: {self.symb}"
+		return f"nom: {self.nom} \n symbole: {self.symb}"
 
 class Bouton:
 	def __init__(self, index, pos, size):
@@ -185,10 +185,11 @@ class Grille:
 			for bouton in ligne:
 				case = self.valeur(bouton.index)
 				image = image_dot
-				if case == "x":
-					image = image_x
-				elif case == "o":
-					image = image_o
+				for i in range(len(liste_symbolestr)):
+					if case == liste_symbolestr[i]:
+						image = liste_symbole[i]
+
+				
 				
 				x, y = bouton.pos
 				x += bouton.offset[0]
@@ -205,18 +206,23 @@ class Grille:
 class Jeu:
 	def __init__(self, joueur1, joueur2):
 		self.joueurs = [joueur1, joueur2]
-		self.jactuel_index = random.randint(0,1)
-		self.jactuel = self.joueurs[self.jactuel_index]
-		self.tour = 0
+		
+		self.jactuel_index = 0
+		self.jactuel = self.joueurs[0]
+		self.tour = 1
 
 		self.game_over = False
 		self.grille = Grille(3)
 		self.actif = True
-	
+		self.menu = True
+		self.fin_selection = 0
+		self.ini = True
+
 	def joueur_actuel(self):
 		return self.jactuel
 
 	def tour_suivant(self):
+		
 		self.tour += 1
 		self.jactuel_index += 1
 		self.jactuel_index %= len(self.joueurs)
@@ -238,27 +244,45 @@ class Jeu:
 				if event.type == pygame.MOUSEBUTTONDOWN:
 					clic_gauche = True
 
-			# Limiter les FPS
-			clock.tick(60)
-			now = time.time()
-			dt = now - prev_time
-			prev_time = now
 
 			choix = None
 			if not self.game_over:
 				choix = self.grille.interaction_boutons(clic_gauche)
 			self.grille.animer_curseur(dt) 
 
-			if choix:
-				self.grille.changer_val(choix[0], choix[1], self.jactuel.symb)
-				victoire = self.grille.victoire(self.tour)
-				print(self.tour)
-				
-				self.tour_suivant()
-						
-			# On dessine la grille
-			screen.fill(blanc)
-			self.grille.afficher_grille(self.jactuel)
+            # On dessine la grille
+			if self.menu != True:
+				if self.ini == True:
+
+					self.test = True
+					self.jactuel_index = random.randint(0,1)
+					self.jactuel = self.joueurs[self.jactuel_index]
+					self.grille.afficher_grille(self.jactuel)
+					self.grille = Grille(3)
+					self.tour = 0
+					self.ini = False
+						# Limiter les FPS
+				print(self.jactuel_index)
+				clock.tick(60)
+				now = time.time()
+				dt = now - prev_time
+				prev_time = now
+				choix = self.grille.interaction_boutons(clic_gauche)
+				self.grille.animer_curseur(dt) 
+
+				if choix:
+					self.jactuel = self.joueurs[self.jactuel_index]
+					print("tour",self.tour)
+					print("index",self.jactuel_index)
+					print("jactuel",self.jactuel)
+					print(self.jactuel,"/",self.jactuel.symb)
+					self.grille.changer_val(choix[0], choix[1], self.jactuel.symb)
+					victoire = self.grille.victoire(self.tour)
+					self.tour_suivant()
+     #pin
+
+	
+				screen.fill(blanc)
 
 			# Affichage du texte
 			text = ""
@@ -270,6 +294,63 @@ class Jeu:
 			#textsurface = small_font.render(text, False, (0, 0, 0))
 			#screen.blit(textsurface,(0,0))
 
+                # Affichage du texte
+				textsurface = small_font.render('Score : 5', False, (0, 0, 0))
+				screen.blit(textsurface,(0,0))
+            
+
+				# Affichage du texte
+				text = ""
+				if victoire:
+					text = f"{victoire} gagne!"
+				#textsurface = small_font.render(text, False, (0, 0, 0))
+				#screen.blit(textsurface,(0,0))
+
+				# On dessine la grille
+
+				self.grille.afficher_grille(self.jactuel)
+				if victoire:
+					pass
+
+					# Affichage du texte
+					textsurface = small_font.render('Score : 5', False, (0, 0, 0))
+					screen.blit(textsurface,(0,0))
+				
+			
+			#Menu
+				
+			if self.menu == True:
+					
+				screen.fill(blanc)
+				text_selection = liste_joueur[self.jactuel_index]
+				selection = small_font.render(text_selection, False, noir)
+				selection_x = (l_ecran - small_font.size(text_selection )[0])/2
+				screen.blit(selection,(selection_x,0))
+				#affichage des symboles
+				
+				gap = (l_ecran - n_symbole*image_size)/(n_symbole+1)
+				y_pos_symbole = (h_ecran-image_size)/2
+				liste_bouton = []
+				for n in range(n_symbole):
+					x_pos_symbole = (n+1)*gap+image_size*n
+					screen.blit(pygame.transform.scale(liste_symbole[n], image_res), (x_pos_symbole,y_pos_symbole))
+					liste_bouton.append(Bouton(n,(x_pos_symbole,y_pos_symbole),image_res))
+					if liste_bouton[n].est_clique(clic_gauche):
+						
+						self.jactuel = self.joueurs[self.jactuel_index]
+						print("avant: ",self.jactuel)
+						self.jactuel.symb = liste_symbolestr[n]
+						print("apres: ",self.jactuel)
+						self.jactuel_index = (self.jactuel_index+1)%2
+						self.fin_selection += 1	
+				#condition enlever menu
+				if self.fin_selection == len(liste_joueur):
+					self.menu = False
+
+
+   
+   
+			
 			# On affiche tout sur l'écran 
 			pygame.display.flip()
 
@@ -278,6 +359,9 @@ class Jeu:
 taille_ecran = l_ecran, h_ecran = 640, 480
 noir = (0, 0, 0)
 blanc = (255, 255, 255)
+vert = (50, 132, 100)
+rouge = (180, 32, 42)
+
 pygame.display.set_caption("Morpion par Léo et Guillaume")
 screen = pygame.display.set_mode(taille_ecran)
 
@@ -289,7 +373,7 @@ image_o = pygame.image.load("images/o.png")
 image_x = pygame.image.load("images/x.png")
 image_tri = pygame.image.load("images/tri.png")
 image_dot = pygame.image.load("images/dot.png")
-
+image_sq = pygame.image.load("images/sq.png")
 image_size = 64
 image_res = (image_size, image_size)
 espace_entre_cases = 10
@@ -302,11 +386,17 @@ pygame.font.init()
 small_font = pygame.font.Font('font/8-bit-hud.ttf', 30)
 
 # Initialisation du jeu
-j1 = Joueur("Léo", "x")
-j2 = Joueur("Guigui", "o")
+j1_name = "j1"
+j2_name = "j2"
+j1 = Joueur("j1", "x")
+j2 = Joueur("j2", "o")
+liste_joueur = ["j1","j2"]
+liste_symbole = [image_o,image_x,image_tri,image_sq]
+liste_symbolestr = ['o','x','tri','sq']
+n_symbole = len(liste_symbole)
 grille = Grille(3)
 jeu = Jeu(j1, j2)
 pygame.font.init()
 clock = pygame.time.Clock()
 
-jeu.main()
+jeu.main()	
