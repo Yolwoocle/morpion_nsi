@@ -71,18 +71,26 @@ class Cursor:
 	def __init__(self, pos):
 		self.pos = list(pos)
 		self.width = 0
-	
+		self.visible = True
+		self.anim_timer = 0
+
+	def animate(self, dt):
+		self.anim_timer += dt * 1000
+		self.width *= 0.9
+
 	def draw(self, joueur):
-		w = image_size / 2
-		corners = ((0,0,w,w),(0,w,w,w),(w,0,w,w),(w,w,w,w))
-		offset = ((-1,-1),(-1,1),(1,-1),(1,1))
-		for i in range(4):
-			crop = corners[i]
-			ox, oy = offset[i]
-			dist = math.sin(pygame.time.get_ticks()/100) * 4 + 8 
-			dist += self.width
-			pos = (self.pos[0] + crop[0] + ox*dist, self.pos[1] + crop[1] + oy*dist)
-			screen.blit(pygame.transform.scale(joueur.image_curseur, image_res), pos, crop)
+		if self.visible:
+			w = image_size / 2
+			corners = ((0,0,w,w),(0,w,w,w),(w,0,w,w),(w,w,w,w))
+			offset = ((-1,-1),(-1,1),(1,-1),(1,1))
+			for i in range(4):
+				crop = corners[i]
+				ox, oy = offset[i]
+				#dist = math.sin(pygame.time.get_ticks()/100) * 4 + 8 
+				dist = math.sin(self.anim_timer/100) * 4 + 8 
+				dist += self.width
+				pos = (self.pos[0] + crop[0] + ox*dist, self.pos[1] + crop[1] + oy*dist)
+				screen.blit(pygame.transform.scale(joueur.image_curseur, image_res), pos, crop)
 
 class Grille:
 	def __init__(self, largeur):
@@ -158,10 +166,13 @@ class Grille:
 					self.selection = bouton
 				if bouton.est_clique(clic_gauche) and self.est_vide(bouton.index): 
 					self.cursor.width = -8
+					self.cursor.anim_timer = 0
 					return bouton.index
 		return None
 
 	def animer_curseur(self, dt):
+		self.cursor.animate(dt)
+
 		if self.selection:
 			self.cursor.pos[0] += ((self.selection.pos[0]) - self.cursor.pos[0]) * dt * 20
 			self.cursor.pos[1] += ((self.selection.pos[1]) - self.cursor.pos[1]) * dt * 20
@@ -198,6 +209,8 @@ class Jeu:
 		self.jactuel_index = 0
 		self.jactuel = self.joueurs[0]
 		self.tour = 1
+  
+		self.game_over = False
 
 		self.grille = Grille(3)
 		self.actif = True
@@ -231,7 +244,10 @@ class Jeu:
 				if event.type == pygame.MOUSEBUTTONDOWN:
 					clic_gauche = True
 
-
+			choix = None
+			if not self.game_over:
+				choix = self.grille.interaction_boutons(clic_gauche)
+			self.grille.animer_curseur(dt) 
 
             # On dessine la grille
 			if self.menu != True:
