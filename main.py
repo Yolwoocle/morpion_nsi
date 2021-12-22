@@ -125,6 +125,7 @@ class Grille:
 		self.initialiser_boutons()
 		self.selection = None
 		self.cursor = Cursor([-84, -84])
+		self.n_animation= 0
 	
 	def initialiser_boutons(self):
 		n = self.n
@@ -237,8 +238,14 @@ class Grille:
 				x += bouton.offset[0]
 				y += bouton.offset[1]
 				if bouton.bounce:
-					y += math.sin(pygame.time.get_ticks()/100 + bouton.index[0] + 1.65*bouton.index[1]) * 8
-				
+					for i in range(len(liste_symbolestr)):
+						if case == liste_symbolestr[i]:
+							index_animation = i
+       
+					offset = bouton.index[0] + 1.65 * bouton.index[1]
+					y += math.sin(pygame.time.get_ticks()/100 + offset) * 8
+					print(str(case))
+					image = liste_symbole_animation[index_animation][int((round(pygame.time.get_ticks()/67))%len(liste_symbole_animation[index_animation]))]
 				screen.blit(pygame.transform.scale(image, image_res), (x, y))
 		# Afficher curseur
 		# TODO: sélparer curseur dans sa classe
@@ -376,7 +383,7 @@ class Jeu:
 			screen.blit(textsurface,(0,0))
 			
 			# Menu
-			if self.menu:
+			if self.menu == True:
 				screen.fill(blanc)
 				text_selection = liste_joueur[self.jactuel_index]
 				selection = small_font.render(text_selection, False, noir)
@@ -391,6 +398,7 @@ class Jeu:
 					x_pos_symbole = (n+1)*gap+image_size*n
 					screen.blit(pygame.transform.scale(liste_symbole[n], image_res), (x_pos_symbole,y_pos_symbole))
 					liste_bouton.append(Bouton(n,(x_pos_symbole,y_pos_symbole),image_res))
+
 					if liste_bouton[n].est_clique(clic_gauche):
 						
 						self.jactuel = self.joueurs[self.jactuel_index]
@@ -428,6 +436,31 @@ image_size = 64
 image_res = (image_size, image_size)
 espace_entre_cases = 10
 
+#importation des images animations
+animation_x = []
+animation_x.append(pygame.image.load('images/x_animation/x1.png'))
+animation_x.append(pygame.image.load('images/x_animation/x2.png'))
+animation_x.append(pygame.image.load('images/x_animation/x3.png'))
+animation_x.append(pygame.image.load('images/x_animation/x4.png'))
+animation_x.append(pygame.image.load('images/x_animation/x5.png'))
+animation_x.append(pygame.image.load('images/x_animation/x6.png'))
+animation_x.append(pygame.image.load('images/x_animation/x7.png'))
+animation_x.append(pygame.image.load('images/x_animation/x8.png'))
+
+animation_o = []
+animation_o.append(pygame.image.load('images/o_animation/o1.png'))
+animation_o.append(pygame.image.load('images/o_animation/o2.png'))
+animation_o.append(pygame.image.load('images/o_animation/o3.png'))
+animation_o.append(pygame.image.load('images/o_animation/o4.png'))
+animation_o.append(pygame.image.load('images/o_animation/o5.png'))
+animation_o.append(pygame.image.load('images/o_animation/o6.png'))
+animation_o.append(pygame.image.load('images/o_animation/o7.png'))
+animation_o.append(pygame.image.load('images/o_animation/o8.png'))
+
+animation_tri = animation_o 
+
+animation_sq = animation_o 
+frame_actuelle = 0
 # Intéraction 
 clic_gauche = False
 
@@ -444,6 +477,7 @@ j2 = IA_Joueur("j2", "o")
 liste_joueur = ["j1","j2"]
 liste_symbole = [image_o,image_x,image_tri,image_sq]
 liste_symbolestr = ['o','x','tri','sq']
+liste_symbole_animation = [animation_o,animation_x,animation_tri,animation_sq]
 n_symbole = len(liste_symbole)
 grille = Grille(3)
 
