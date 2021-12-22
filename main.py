@@ -14,6 +14,7 @@ class Joueur:
 	def __init__(self, nom, symb):
 		self.nom = nom
 		self.symb = symb
+		self.isAI = False
 		if symb == "x":
 			self.image = image_x
 			self.couleur = (50, 132, 100)
@@ -34,6 +35,54 @@ class Joueur:
 	def __str__(self):
 		return f"nom: {self.nom} \n symbole: {self.symb}"
 
+######## AI OPPONENT ##########
+class IA_Joueur(Joueur):
+	def __init__(self, nom, symb, difficulte=0):
+		super().__init__(nom, symb)
+		self.difficulte = difficulte
+		self.isAI = True
+	
+	def jouer(self, grille):
+		self.choice = None
+		self.minimax(grille, self.symb)
+		return self.choice
+
+	def minimax(self, grille, symb):
+		# Algorithme minimax récursif
+		cases_vides = grille.cases_vides()
+		if len(cases_vides) == 0:
+			return grille.score(symb)
+
+		scores = []
+		moves = grille.cases_vides()
+
+		# On génère le score de toutes les possibilités possibles
+		for move in moves:
+			# TODO: c'est giga pas opti niveau mémoire
+			grille_possible = Grille(grille.n)
+			grille_possible.table = grille.table[:]
+			grille_possible.changer_val(move, self.symb)
+			scores.append(self.minimax(grille_possible, "*"))
+
+		if symb == self.symb:
+			# Joueur maximisant
+			# On trouve l'index du score maximisant
+			max_i = 0
+			for i in range(1, len(scores)):
+				if scores[i] > scores[max_i]:
+					max_i = i
+			self.choice = moves[max_i]
+			return scores[max_i]
+		else:
+			# On sélectionne le meilleur score pour le joueur minimisant
+			min_i = 0
+			for i in range(1, len(scores)):
+				if scores[i] > scores[min_i]:
+					min_i = i
+			return scores[min_i]
+		
+
+######## BOUTON ########
 class Bouton:
 	def __init__(self, index, pos, size):
 		self.index = index
@@ -67,31 +116,6 @@ class Case:
 	def __str__(self):
 		return f"position : {self.pos}\nvaleur : {self.val}"
 
-###################### CURSOR ######################
-class Cursor:
-	def __init__(self, pos):
-		self.pos = list(pos)
-		self.width = 0
-		self.visible = True
-		self.anim_timer = 0
-
-	def animate(self, dt):
-		self.anim_timer += dt * 1000
-		self.width *= 0.9
-
-	def draw(self, joueur):
-		if self.visible:
-			w = image_size / 2
-			corners = ((0,0,w,w),(0,w,w,w),(w,0,w,w),(w,w,w,w))
-			offset = ((-1,-1),(-1,1),(1,-1),(1,1))
-			for i in range(4):
-				crop = corners[i]
-				ox, oy = offset[i]
-				#dist = math.sin(pygame.time.get_ticks()/100) * 4 + 8 
-				dist = math.sin(self.anim_timer/100) * 4 + 8 
-				dist += self.width
-				pos = (self.pos[0] + crop[0] + ox*dist, self.pos[1] + crop[1] + oy*dist)
-				screen.blit(pygame.transform.scale(joueur.image_curseur, image_res), pos, crop)
 
 ################## GRILLE #####################
 class Grille:
@@ -118,9 +142,11 @@ class Grille:
 	def est_vide(self, index):
 		return self.table[index[0]][index[1]] == 0
 
-	def changer_val(self, i, j, symbole):
-		# todo chagner nom
-		self.table[i][j] = symbole
+	def changer_val(self, i, j, symbole=None):
+		if symbole == None:
+			self.table[i[0]][i[1]] = j
+		else:
+			self.table[i][j] = symbole
 	
 	def valeur(self, index, j=None):
 		if j == None:
@@ -132,11 +158,21 @@ class Grille:
 			return self.boutons[index[0]][index[1]]
 		return self.boutons[index][j]
 	
-	def victoire(self, tour):
+	def score(self, symb):
+		victoire = self.victoire()
+		if not victoire or victoire == "match nul":
+			return 0 
+		elif victoire == symb:
+			return 1
+		else:
+			return -1 
+	
+	def victoire(self, tour=0):
 		table = self.table
 		n = self.n
 		combinaisons = []
 		# TODO: opti en stockant plutot que générer à chaque fois 
+		# On génère toutes les combinaisons
 		for ligne in range(n):
 			combinaisons.append([(ligne, case) for case in range(n)])
 		for colonne in range(n):
@@ -160,6 +196,14 @@ class Grille:
 		if tour >= n*n:
 			return "match nul"
 		return False
+	
+	def cases_vides(self):
+		mouvs = []
+		for i in range(self.n):
+			for j in range(self.n):
+				if self.table[i][j] == 0:
+					mouvs.append((i,j))
+		return mouvs
 	
 	def interaction_boutons(self, clic_gauche):
 		for ligne in self.boutons:
@@ -200,6 +244,32 @@ class Grille:
 		# TODO: sélparer curseur dans sa classe
 		self.cursor.draw(joueur)
 
+###################### CURSOR ######################
+class Cursor:
+	def __init__(self, pos):
+		self.pos = list(pos)
+		self.width = 0
+		self.visible = True
+		self.anim_timer = 0
+
+	def animate(self, dt):
+		self.anim_timer += dt * 1000
+		self.width *= 0.9
+
+	def draw(self, joueur):
+		if self.visible:
+			w = image_size / 2
+			corners = ((0,0,w,w),(0,w,w,w),(w,0,w,w),(w,w,w,w))
+			offset = ((-1,-1),(-1,1),(1,-1),(1,1))
+			for i in range(4):
+				crop = corners[i]
+				ox, oy = offset[i]
+				#dist = math.sin(pygame.time.get_ticks()/100) * 4 + 8 
+				dist = math.sin(self.anim_timer/100) * 4 + 8 
+				dist += self.width
+				pos = (self.pos[0] + crop[0] + ox*dist, self.pos[1] + crop[1] + oy*dist)
+				screen.blit(pygame.transform.scale(joueur.image_curseur, image_res), pos, crop)
+
 ###################### JEU ######################
 class Jeu:
 	def __init__(self, joueur1, joueur2):
@@ -222,7 +292,6 @@ class Jeu:
 		return self.jactuel
 
 	def tour_suivant(self):
-		
 		self.tour += 1
 		self.jactuel_index += 1
 		self.jactuel_index %= len(self.joueurs)
@@ -251,11 +320,6 @@ class Jeu:
 			dt = now - prev_time
 			prev_time = now
 
-			choix = None
-			if not self.game_over:
-				choix = self.grille.interaction_boutons(clic_gauche)
-			self.grille.animer_curseur(dt) 
-
             # On dessine la grille
 			if not self.menu:
 				if self.ini:
@@ -267,12 +331,15 @@ class Jeu:
 					self.grille = Grille(3)
 					self.tour = 0
 					self.ini = False
-						# Limiter les FPS
-				print(self.jactuel_index)
-				choix = self.grille.interaction_boutons(clic_gauche)
+				
+				choix = None
+				if self.jactuel.isAI:
+					choix = self.jactuel.jouer(self.grille)
+				else:
+					choix = self.grille.interaction_boutons(clic_gauche)
 				self.grille.animer_curseur(dt) 
 
-				if choix:
+				if choix != None:
 					self.jactuel = self.joueurs[self.jactuel_index]
 					self.grille.changer_val(choix[0], choix[1], self.jactuel.symb)
 					victoire = self.grille.victoire(self.tour)
@@ -283,12 +350,9 @@ class Jeu:
 			# Affichage du texte
 			text = ""
 			if victoire:
-				print(victoire)
 				self.grille.cursor.visible = False
 				self.game_over = True
 				text = f"{victoire} gagne!"
-			#textsurface = small_font.render(text, False, (0, 0, 0))
-			#screen.blit(textsurface,(0,0))
 
 			# Affichage du texte
 			textsurface = small_font.render('Score : 5', False, (0, 0, 0))
@@ -310,12 +374,9 @@ class Jeu:
 			# Affichage du texte
 			textsurface = small_font.render('Score : 5', False, (0, 0, 0))
 			screen.blit(textsurface,(0,0))
-				
 			
-			#Menu
-				
+			# Menu
 			if self.menu:
-					
 				screen.fill(blanc)
 				text_selection = liste_joueur[self.jactuel_index]
 				selection = small_font.render(text_selection, False, noir)
@@ -333,19 +394,13 @@ class Jeu:
 					if liste_bouton[n].est_clique(clic_gauche):
 						
 						self.jactuel = self.joueurs[self.jactuel_index]
-						print("avant: ",self.jactuel)
 						self.jactuel.symb = liste_symbolestr[n]
-						print("apres: ",self.jactuel)
 						self.jactuel_index = (self.jactuel_index+1)%2
 						self.fin_selection += 1	
 				#condition enlever menu
 				if self.fin_selection == len(liste_joueur):
 					self.menu = False
 
-
-   
-   
-			
 			# On affiche tout sur l'écran 
 			pygame.display.flip()
 
@@ -385,13 +440,15 @@ j1_name = "j1"
 j2_name = "j2"
 j1 = Joueur("j1", "x")
 j2 = Joueur("j2", "o")
+j2 = IA_Joueur("j2", "o")
 liste_joueur = ["j1","j2"]
 liste_symbole = [image_o,image_x,image_tri,image_sq]
 liste_symbolestr = ['o','x','tri','sq']
 n_symbole = len(liste_symbole)
 grille = Grille(3)
-jeu = Jeu(j1, j2)
+
 pygame.font.init()
 clock = pygame.time.Clock()
 
+jeu = Jeu(j1, j2)
 jeu.main()	
