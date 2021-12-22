@@ -74,27 +74,6 @@ class Cursor:
 		self.width = 0
 		self.visible = True
 		self.anim_timer = 0
-<<<<<<< HEAD
-
-	def animate(self, dt):
-		self.anim_timer += dt * 1000
-		self.width *= 0.9
-
-	def draw(self, joueur):
-		if self.visible:
-			w = image_size / 2
-			corners = ((0,0,w,w),(0,w,w,w),(w,0,w,w),(w,w,w,w))
-			offset = ((-1,-1),(-1,1),(1,-1),(1,1))
-			for i in range(4):
-				crop = corners[i]
-				ox, oy = offset[i]
-				#dist = math.sin(pygame.time.get_ticks()/100) * 4 + 8 
-				dist = math.sin(self.anim_timer/100) * 4 + 8 
-				dist += self.width
-				pos = (self.pos[0] + crop[0] + ox*dist, self.pos[1] + crop[1] + oy*dist)
-				screen.blit(pygame.transform.scale(joueur.image_curseur, image_res), pos, crop)
-=======
->>>>>>> 590f1f662ff54bc4560c51287495ea147afb3cb2
 
 	def animate(self, dt):
 		self.anim_timer += dt * 1000
@@ -195,10 +174,6 @@ class Grille:
 
 	def animer_curseur(self, dt):
 		self.cursor.animate(dt)
-<<<<<<< HEAD
-
-=======
->>>>>>> 590f1f662ff54bc4560c51287495ea147afb3cb2
 		if self.selection:
 			self.cursor.pos[0] += ((self.selection.pos[0]) - self.cursor.pos[0]) * dt * 20
 			self.cursor.pos[1] += ((self.selection.pos[1]) - self.cursor.pos[1]) * dt * 20
@@ -213,14 +188,12 @@ class Grille:
 				for i in range(len(liste_symbolestr)):
 					if case == liste_symbolestr[i]:
 						image = liste_symbole[i]
-
-				
 				
 				x, y = bouton.pos
 				x += bouton.offset[0]
 				y += bouton.offset[1]
 				if bouton.bounce:
-					y += math.sin(pygame.time.get_ticks()/100 + bouton.index[0]+bouton.index[1]) * 8
+					y += math.sin(pygame.time.get_ticks()/100 + bouton.index[0] + 1.65*bouton.index[1]) * 8
 				
 				screen.blit(pygame.transform.scale(image, image_res), (x, y))
 		# Afficher curseur
@@ -271,18 +244,21 @@ class Jeu:
 				if event.type == pygame.MOUSEBUTTONDOWN:
 					clic_gauche = True
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 590f1f662ff54bc4560c51287495ea147afb3cb2
+			# Delta time
+			clock.tick(60)
+			now = time.time()
+			dt = now - prev_time
+			prev_time = now
+
 			choix = None
 			if not self.game_over:
 				choix = self.grille.interaction_boutons(clic_gauche)
 			self.grille.animer_curseur(dt) 
 
             # On dessine la grille
-			if self.menu != True:
-				if self.ini == True:
+			if not self.menu:
+				if self.ini:
 
 					self.test = True
 					self.jactuel_index = random.randint(0,1)
@@ -293,10 +269,6 @@ class Jeu:
 					self.ini = False
 						# Limiter les FPS
 				print(self.jactuel_index)
-				clock.tick(60)
-				now = time.time()
-				dt = now - prev_time
-				prev_time = now
 				choix = self.grille.interaction_boutons(clic_gauche)
 				self.grille.animer_curseur(dt) 
 
@@ -306,8 +278,6 @@ class Jeu:
 					victoire = self.grille.victoire(self.tour)
 					self.tour_suivant()
      #pin
-
-	
 				screen.fill(blanc)
 
 			# Affichage du texte
@@ -320,32 +290,31 @@ class Jeu:
 			#textsurface = small_font.render(text, False, (0, 0, 0))
 			#screen.blit(textsurface,(0,0))
 
-                # Affichage du texte
-				textsurface = small_font.render('Score : 5', False, (0, 0, 0))
-				screen.blit(textsurface,(0,0))
-            
+			# Affichage du texte
+			textsurface = small_font.render('Score : 5', False, (0, 0, 0))
+			screen.blit(textsurface,(0,0))
+		
 
-				# Affichage du texte
-				text = ""
-				if victoire:
-					text = f"{victoire} gagne!"
-				#textsurface = small_font.render(text, False, (0, 0, 0))
-				#screen.blit(textsurface,(0,0))
+			# Affichage du texte
+			text = ""
+			if victoire:
+				text = f"{victoire} gagne!"
+			#textsurface = small_font.render(text, False, (0, 0, 0))
+			#screen.blit(textsurface,(0,0))
 
-				# On dessine la grille
+			# On dessine la grille
+			self.grille.afficher_grille(self.jactuel)
+			if victoire:
+				pass
 
-				self.grille.afficher_grille(self.jactuel)
-				if victoire:
-					pass
-
-					# Affichage du texte
-					textsurface = small_font.render('Score : 5', False, (0, 0, 0))
-					screen.blit(textsurface,(0,0))
+			# Affichage du texte
+			textsurface = small_font.render('Score : 5', False, (0, 0, 0))
+			screen.blit(textsurface,(0,0))
 				
 			
 			#Menu
 				
-			if self.menu == True:
+			if self.menu:
 					
 				screen.fill(blanc)
 				text_selection = liste_joueur[self.jactuel_index]
