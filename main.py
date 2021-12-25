@@ -35,6 +35,7 @@ class Joueur:
 	def __str__(self):
 		return f"nom: {self.nom} \n symbole: {self.symb}"
 
+states = 0
 ######## AI OPPONENT ##########
 class IA_Joueur(Joueur):
 	def __init__(self, nom, symb, difficulte=0):
@@ -43,25 +44,34 @@ class IA_Joueur(Joueur):
 		self.isAI = True
 	
 	def jouer(self, grille):
+		return random. grille
 		self.choice = None
 		self.minimax(grille, self.symb)
 		return self.choice
 
 	def minimax(self, grille, symb):
 		# Algorithme minimax récursif
-		cases_vides = grille.cases_vides()
-		if len(cases_vides) == 0:
+		moves = grille.cases_vides()
+		score = grille.score(symb)
+		if len(moves) == 0 or score != 0:
 			return grille.score(symb)
 
 		scores = []
-		moves = grille.cases_vides()
 
 		# On génère le score de toutes les possibilités possibles
 		for move in moves:
 			# TODO: c'est giga pas opti niveau mémoire
 			grille_possible = Grille(grille.n)
-			grille_possible.table = grille.table[:]
-			grille_possible.changer_val(move, self.symb)
+			grille_possible.table = [i[:] for i in grille.table]
+			grille_possible.changer_val(move, symb)
+
+			for i in grille_possible.table:
+				pass
+				#print(i)
+			#print("--------")
+			# TODO: adaptable à n nombre de joueurs
+			if symb == "*":
+				symb = self.symb
 			scores.append(self.minimax(grille_possible, "*"))
 
 		if symb == self.symb:
@@ -119,7 +129,7 @@ class Case:
 
 ################## GRILLE #####################
 class Grille:
-	def __init__(self, largeur):
+	def __init__(self, largeur=3):
 		self.n = largeur
 		self.table = [[0]* largeur for i in range(largeur)]
 		self.initialiser_boutons()
@@ -237,7 +247,8 @@ class Grille:
 				x += bouton.offset[0]
 				y += bouton.offset[1]
 				if bouton.bounce:
-					y += math.sin(pygame.time.get_ticks()/100 + bouton.index[0] + 1.65*bouton.index[1]) * 8
+					offset = bouton.index[0] + 1.65 * bouton.index[1]
+					y += math.sin(pygame.time.get_ticks()/100 + offset) * 8
 				
 				screen.blit(pygame.transform.scale(image, image_res), (x, y))
 		# Afficher curseur
@@ -336,9 +347,10 @@ class Jeu:
 					choix = self.grille.interaction_boutons(clic_gauche)
 				self.grille.animer_curseur(dt) 
 
+				if choix !=None:
+					print(choix)
 				if choix != None:
-					self.jactuel = self.joueurs[self.jactuel_index]
-					self.grille.changer_val(choix[0], choix[1], self.jactuel.symb)
+					self.grille.changer_val(choix, self.jactuel.symb)
 					victoire = self.grille.victoire(self.tour)
 					self.tour_suivant()
      #pin
@@ -354,7 +366,6 @@ class Jeu:
 			# Affichage du texte
 			textsurface = small_font.render('Score : 5', False, (0, 0, 0))
 			screen.blit(textsurface,(0,0))
-		
 
 			# Affichage du texte
 			text = ""
@@ -437,7 +448,7 @@ j1_name = "j1"
 j2_name = "j2"
 j1 = Joueur("j1", "x")
 j2 = Joueur("j2", "o")
-j2 = IA_Joueur("j2", "o")
+#j2 = IA_Joueur("j2", "o")
 liste_joueur = ["j1","j2"]
 liste_symbole = [image_o,image_x,image_tri,image_sq]
 liste_symbolestr = ['o','x','tri','sq']
