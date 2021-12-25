@@ -294,7 +294,7 @@ class Jeu:
 		self.menu = True
 		self.fin_selection = 0
 		self.ini = True
-
+		self.symbole_pris = None
 	def joueur_actuel(self):
 		return self.jactuel
 
@@ -338,6 +338,7 @@ class Jeu:
 					self.grille = Grille(3)
 					self.tour = 0
 					self.ini = False
+
 				
 				choix = None
 				if self.jactuel.isAI:
@@ -351,7 +352,7 @@ class Jeu:
 					self.grille.changer_val(choix[0], choix[1], self.jactuel.symb)
 					victoire = self.grille.victoire(self.tour)
 					self.tour_suivant()
-     #pin
+
 				screen.fill(blanc)
 
 			# Affichage du texte
@@ -398,13 +399,19 @@ class Jeu:
 					x_pos_symbole = (n+1)*gap+image_size*n
 					screen.blit(pygame.transform.scale(liste_symbole[n], image_res), (x_pos_symbole,y_pos_symbole))
 					liste_bouton.append(Bouton(n,(x_pos_symbole,y_pos_symbole),image_res))
-
-					if liste_bouton[n].est_clique(clic_gauche):
+					if liste_bouton[n].est_clique(clic_gauche) and self.symbole_pris != n:
 						
 						self.jactuel = self.joueurs[self.jactuel_index]
 						self.jactuel.symb = liste_symbolestr[n]
 						self.jactuel_index = (self.jactuel_index+1)%2
 						self.fin_selection += 1	
+						self.symbole_pris = n
+					if liste_bouton[n].est_survole():
+						screen.blit(pygame.transform.scale(liste_symbole[n], (image_res[0]*1.2,image_res[1]*1.2)), (x_pos_symbole-(image_res[0]*0.2)/2,y_pos_symbole-(image_res[0]*0.2)/2))
+					else:
+						screen.blit(pygame.transform.scale(liste_symbole[n], image_res), (x_pos_symbole,y_pos_symbole))
+
+						
 				#condition enlever menu
 				if self.fin_selection == len(liste_joueur):
 					self.menu = False
