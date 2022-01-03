@@ -25,6 +25,18 @@ class Joueur:
 			self.couleur = (180, 32, 42)
 			self.couleur2 = (59, 23, 37)
 			self.image_curseur = image_curseur_o
+		elif symb == "tri":
+			self.image = image_tri
+			self.couleur = (180, 32, 42)
+			self.couleur2 = (59, 23, 37)
+			print(symb)
+			self.image_curseur = image_curseur_x
+		elif symb == "sq":
+			self.image = image_sq
+			self.couleur = (180, 32, 42)
+			self.couleur2 = (59, 23, 37)
+			print(symb)
+			self.image_curseur = image_curseur_x
 		else: 
 			# Valeurs par défaut
 			self.image = image_dot
@@ -350,7 +362,7 @@ class Jeu:
 					self.ini = False
 					self.time = 0
 
-				
+
 				choix = None
 				if self.jactuel.isAI:
 					choix = self.jactuel.jouer(self.grille)
@@ -483,9 +495,17 @@ animation_o.append(pygame.image.load('images/o_animation/o6.png'))
 animation_o.append(pygame.image.load('images/o_animation/o7.png'))
 animation_o.append(pygame.image.load('images/o_animation/o8.png'))
 
-animation_tri = animation_o 
 
-animation_sq = animation_o 
+animation_sq = []
+animation_sq.append(pygame.image.load('images/sq_animation/sq1.png'))
+animation_sq.append(pygame.image.load('images/sq_animation/sq2.png'))
+animation_sq.append(pygame.image.load('images/sq_animation/sq3.png'))
+animation_sq.append(pygame.image.load('images/sq_animation/sq4.png'))
+animation_sq.append(pygame.image.load('images/sq_animation/sq5.png'))
+animation_sq.append(pygame.image.load('images/sq_animation/sq6.png'))
+animation_sq.append(pygame.image.load('images/sq_animation/sq7.png'))
+
+animation_tri = animation_o 
 frame_actuelle = 0
 # Intéraction 
 clic_gauche = False
