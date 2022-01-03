@@ -56,7 +56,7 @@ class IA_Joueur(Joueur):
 		self.isAI = True
 	
 	def jouer(self, grille):
-		return random. grille
+		return random .grille
 		self.choice = None
 		self.minimax(grille, self.symb)
 		return self.choice
@@ -303,6 +303,7 @@ class Cursor:
 class Jeu:
 	def __init__(self, joueur1, joueur2):
 		self.joueurs = [joueur1, joueur2]
+		self.ia_onoff = ["On","Off"]
 		
 		self.jactuel_index = 0
 		self.jactuel = self.joueurs[0]
@@ -317,6 +318,7 @@ class Jeu:
 		self.fin_selection = 0
 		self.ini = True
 		self.symbole_pris = None
+		self.ia_test_index = 0
 	def joueur_actuel(self):
 		return self.jactuel
 
@@ -358,9 +360,10 @@ class Jeu:
 					self.jactuel = self.joueurs[self.jactuel_index]
 					self.grille.afficher_grille(self.jactuel)
 					self.grille = Grille(3)
-					self.tour = 0
+					self.tour = 0 #pin
 					self.ini = False
 					self.time = 0
+
 
 
 				choix = None
@@ -419,11 +422,24 @@ class Jeu:
 				selection = small_font.render(text_selection, False, noir)
 				selection_x = (l_ecran - small_font.size(text_selection )[0])/2
 				screen.blit(selection,(selection_x,0))
+				text_ia = "I.A : " + self.ia_onoff[self.ia_test_index]
+				print(self.ia_test_index)
+				selection = small_font.render(text_ia, False, noir)
+				selection_x = (l_ecran - small_font.size(text_ia )[0])/2
+				selection_y = (h_ecran - small_font.size(text_ia)[1])
+				screen.blit(selection,(selection_x,selection_y))
+
 				#affichage des symboles
 				
 				gap = (l_ecran - n_symbole*image_size)/(n_symbole+1)
 				y_pos_symbole = (h_ecran-image_size)/2
 				liste_bouton = []
+				bouton_ia_x, bouton_ia_y  = (l_ecran)/2-30, h_ecran-image_size-40 #brut
+				bouton_ia = Bouton(1,(bouton_ia_x,bouton_ia_y),image_res)
+				screen.blit(pygame.transform.scale(image_dot, image_res),(bouton_ia_x,bouton_ia_y))
+				if bouton_ia.est_clique(clic_gauche):
+					self.ia_test_index = (self.ia_test_index+1)%2
+				
 				for n in range(n_symbole):
 					x_pos_symbole = (n+1)*gap+image_size*n
 					liste_bouton.append(Bouton(n,(x_pos_symbole,y_pos_symbole),image_res))
@@ -445,6 +461,9 @@ class Jeu:
 						
 				#condition enlever menu
 				if self.fin_selection == len(liste_joueur):
+					if self.ia_onoff[self.ia_test_index]:
+						j2 = IA_Joueur("j2",self.joueurs[1].symb)
+						self.joueurs[1] = j2
 					self.menu = False
 
 			# On affiche tout sur l'écran 
@@ -497,6 +516,7 @@ animation_o.append(pygame.image.load('images/o_animation/o8.png'))
 
 
 animation_sq = []
+animation_sq.append(pygame.image.load('images/sq_animation/sq0.png'))
 animation_sq.append(pygame.image.load('images/sq_animation/sq1.png'))
 animation_sq.append(pygame.image.load('images/sq_animation/sq2.png'))
 animation_sq.append(pygame.image.load('images/sq_animation/sq3.png'))
