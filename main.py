@@ -348,6 +348,7 @@ class Jeu:
 					self.grille = Grille(3)
 					self.tour = 0
 					self.ini = False
+					self.time = 0
 
 				
 				choix = None
@@ -381,6 +382,12 @@ class Jeu:
 			text = ""
 			if victoire:
 				text = f"{victoire} gagne!"
+				self.time += 1
+				print(self.time//60)
+				if self.time//60 == 5:
+					jeu = Jeu(j1, j2)
+					jeu.main()	
+
 			#textsurface = small_font.render(text, False, (0, 0, 0))
 			#screen.blit(textsurface,(0,0))
 
