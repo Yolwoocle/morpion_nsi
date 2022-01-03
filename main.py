@@ -15,34 +15,10 @@ class Joueur:
 		self.nom = nom
 		self.symb = symb
 		self.isAI = False
-		if symb == "x":
-			self.image = image_x
-			self.couleur = (50, 132, 100)
-			self.couleur2 = (18, 32, 32)
-			self.image_curseur = image_curseur_x
-		elif symb == "o":
-			self.image = image_o
-			self.couleur = (180, 32, 42)
-			self.couleur2 = (59, 23, 37)
-			self.image_curseur = image_curseur_o
-		elif symb == "tri":
-			self.image = image_tri
-			self.couleur = (180, 32, 42)
-			self.couleur2 = (59, 23, 37)
-			print(symb)
-			self.image_curseur = image_curseur_x
-		elif symb == "sq":
-			self.image = image_sq
-			self.couleur = (180, 32, 42)
-			self.couleur2 = (59, 23, 37)
-			print(symb)
-			self.image_curseur = image_curseur_x
-		else: 
-			# Valeurs par défaut
-			self.image = image_dot
-			self.couleur = (205, 247, 226)
-			self.couleur2 = (33, 45, 72)
-			self.image_curseur = image_curseur
+		self.str_curseur = ""
+		#on dit que par défaut c'est le curseur x qu'on changera ensuite.
+		self.image_curseur = image_curseur_x
+
 
 	def __str__(self):
 		return f"nom: {self.nom} \n symbole: {self.symb}"
@@ -56,7 +32,7 @@ class IA_Joueur(Joueur):
 		self.isAI = True
 	
 	def jouer(self, grille):
-		return random .grille
+		#return random .grille
 		self.choice = None
 		self.minimax(grille, self.symb)
 		return self.choice
@@ -266,7 +242,7 @@ class Grille:
        
 					offset = bouton.index[0] + 1.65 * bouton.index[1]
 					y += math.sin(pygame.time.get_ticks()/100 + offset) * 8
-					print(str(case))
+					#print(str(case))
 					image = liste_symbole_animation[index_animation][int((round(pygame.time.get_ticks()/67))%len(liste_symbole_animation[index_animation]))]
 				screen.blit(pygame.transform.scale(image, image_res), (x, y))
 		# Afficher curseur
@@ -298,13 +274,16 @@ class Cursor:
 				dist += self.width
 				pos = (self.pos[0] + crop[0] + ox*dist, self.pos[1] + crop[1] + oy*dist)
 				screen.blit(pygame.transform.scale(joueur.image_curseur, image_res), pos, crop)
+				print(joueur.str_curseur)
 
 ###################### JEU ######################
 class Jeu:
 	def __init__(self, joueur1, joueur2):
 		self.joueurs = [joueur1, joueur2]
+
 		self.ia_onoff = ["On","Off"]
-		
+		self.ia_test_index = 1
+
 		self.jactuel_index = 0
 		self.jactuel = self.joueurs[0]
 		self.tour = 1
@@ -318,7 +297,6 @@ class Jeu:
 		self.fin_selection = 0
 		self.ini = True
 		self.symbole_pris = None
-		self.ia_test_index = 0
 	def joueur_actuel(self):
 		return self.jactuel
 
@@ -363,6 +341,37 @@ class Jeu:
 					self.tour = 0 #pin
 					self.ini = False
 					self.time = 0
+					for joueur in self.joueurs:
+						if joueur.symb == "x":
+							joueur.image = image_x
+							joueur.couleur = (50, 132, 100)
+							joueur.couleur2 = (18, 32, 32)
+							joueur.image_curseur = image_curseur_x
+							joueur.str_curseur = "x"
+						elif joueur.symb == "o":
+							joueur.image = image_o
+							joueur.couleur = (180, 32, 42)
+							joueur.couleur2 = (59, 23, 37)
+							joueur.image_curseur = image_curseur_o
+							joueur.str_curseur = "o"
+						elif joueur.symb == "tri":
+							joueur.image = image_tri
+							joueur.couleur = (180, 32, 42)
+							joueur.couleur2 = (59, 23, 37)
+							joueur.image_curseur = image_curseur_tri
+							joueur.str_curseur = "tri"
+						elif joueur.symb == "sq":
+							joueur.image = image_sq
+							joueur.couleur = (180, 32, 42)
+							joueur.couleur2 = (59, 23, 37)
+							joueur.image_curseur = image_curseur_sq
+							joueur.str_curseur = "sq"
+						else: 
+							# Valeurs par défaut
+							joueur.image = image_dot
+							joueur.couleur = (205, 247, 226)
+							joueur.couleur2 = (33, 45, 72)
+							joueur.image_curseur = image_curseur
 
 
 
@@ -373,8 +382,6 @@ class Jeu:
 					choix = self.grille.interaction_boutons(clic_gauche)
 				self.grille.animer_curseur(dt) 
 
-				if choix !=None:
-					print(choix)
 				if choix != None:
 					self.grille.changer_val(choix, self.jactuel.symb)
 					victoire = self.grille.victoire(self.tour)
@@ -398,8 +405,10 @@ class Jeu:
 			if victoire:
 				text = f"{victoire} gagne!"
 				self.time += 1
-				print(self.time//60)
+				#print(self.time//60)
 				if self.time//60 == 5:
+					j1 = Joueur("j1", "x")
+					j2 = Joueur("j2", "o")
 					jeu = Jeu(j1, j2)
 					jeu.main()	
 
@@ -422,8 +431,10 @@ class Jeu:
 				selection = small_font.render(text_selection, False, noir)
 				selection_x = (l_ecran - small_font.size(text_selection )[0])/2
 				screen.blit(selection,(selection_x,0))
+
+				#affichage texte I.A on/off
 				text_ia = "I.A : " + self.ia_onoff[self.ia_test_index]
-				print(self.ia_test_index)
+				#print(self.ia_test_index)
 				selection = small_font.render(text_ia, False, noir)
 				selection_x = (l_ecran - small_font.size(text_ia )[0])/2
 				selection_y = (h_ecran - small_font.size(text_ia)[1])
@@ -438,7 +449,7 @@ class Jeu:
 				bouton_ia = Bouton(1,(bouton_ia_x,bouton_ia_y),image_res)
 				screen.blit(pygame.transform.scale(image_dot, image_res),(bouton_ia_x,bouton_ia_y))
 				if bouton_ia.est_clique(clic_gauche):
-					self.ia_test_index = (self.ia_test_index+1)%2
+					self.ia_test_index = (self.ia_test_index+1)%2 #si cliqué, ça fait off ou on mode ia
 				
 				for n in range(n_symbole):
 					x_pos_symbole = (n+1)*gap+image_size*n
@@ -461,11 +472,11 @@ class Jeu:
 						
 				#condition enlever menu
 				if self.fin_selection == len(liste_joueur):
-					if self.ia_onoff[self.ia_test_index]:
+					#si le mode ia est on, le joueur 2 est l'IA
+					if self.ia_onoff[self.ia_test_index] == "On":
 						j2 = IA_Joueur("j2",self.joueurs[1].symb)
 						self.joueurs[1] = j2
 					self.menu = False
-
 			# On affiche tout sur l'écran 
 			pygame.display.flip()
 
@@ -482,6 +493,9 @@ screen = pygame.display.set_mode(taille_ecran)
 
 # Importation des images
 image_curseur = pygame.image.load("images/cursor.png")
+image_curseur_tri = pygame.image.load("images/cursor_tri.png")
+image_curseur_sq = pygame.image.load("images/cursor_sq.png")
+
 image_curseur_o = pygame.image.load("images/cursor_o.png")
 image_curseur_x = pygame.image.load("images/cursor_x.png")
 image_o = pygame.image.load("images/o.png")
@@ -525,7 +539,19 @@ animation_sq.append(pygame.image.load('images/sq_animation/sq5.png'))
 animation_sq.append(pygame.image.load('images/sq_animation/sq6.png'))
 animation_sq.append(pygame.image.load('images/sq_animation/sq7.png'))
 
-animation_tri = animation_o 
+animation_tri = []
+animation_tri.append(pygame.image.load('images/tri_animation/tri1.png'))
+animation_tri.append(pygame.image.load('images/tri_animation/tri2.png'))
+animation_tri.append(pygame.image.load('images/tri_animation/tri3.png'))
+animation_tri.append(pygame.image.load('images/tri_animation/tri4.png'))
+animation_tri.append(pygame.image.load('images/tri_animation/tri5.png'))
+animation_tri.append(pygame.image.load('images/tri_animation/tri6.png'))
+animation_tri.append(pygame.image.load('images/tri_animation/tri7.png'))
+animation_tri.append(pygame.image.load('images/tri_animation/tri8.png'))
+animation_tri.append(pygame.image.load('images/tri_animation/tri9.png'))
+
+
+
 frame_actuelle = 0
 # Intéraction 
 clic_gauche = False
