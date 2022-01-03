@@ -436,6 +436,7 @@ class Jeu:
 					pass
 					#print(choix)
 				if choix != None:
+					sfx_place.play()
 					self.grille.changer_val(choix, self.jactuel.symb)
 					victoire = self.grille.victoire(self.tour)
 					self.tour_suivant()
@@ -452,7 +453,11 @@ class Jeu:
 			if victoire or self.tour == 9:
 				text += " gagne!" + str(self.time//60)
 				
+				
+				if self.time == 0:
+					sfx_win.play()
 				self.time -=1
+
 				#print(self.time//60)
 				if self.time//60 == 0:
 					j1 = Joueur("j1", "x")
@@ -462,8 +467,6 @@ class Jeu:
 
 			textsurface = small_font.render(text, False, (0, 0, 0))
 			screen.blit(textsurface,(0,0))
-
-			
 
 			#textsurface = small_font.render(text, False, (0, 0, 0))
 			#screen.blit(textsurface,(0,0))
@@ -518,6 +521,7 @@ class Jeu:
 						
 						self.jactuel = self.joueurs[self.jactuel_index]
 						self.jactuel.initialiser(liste_symbolestr[n])
+						sfx_place.play()
 						
 						self.jactuel_index = (self.jactuel_index+1)%2
 						self.fin_selection += 1	
@@ -607,6 +611,12 @@ animation_tri.append(pygame.image.load('images/tri_animation/tri7.png'))
 animation_tri.append(pygame.image.load('images/tri_animation/tri8.png'))
 animation_tri.append(pygame.image.load('images/tri_animation/tri9.png'))
 
+
+
+# Sons
+pygame.mixer.init()
+sfx_place = pygame.mixer.Sound('sfx/place.mp3')
+sfx_win = pygame.mixer.Sound('sfx/win.mp3')
 
 
 frame_actuelle = 0
