@@ -25,6 +25,18 @@ class Joueur:
 			self.couleur = (180, 32, 42)
 			self.couleur2 = (59, 23, 37)
 			self.image_curseur = image_curseur_o
+		elif symb == "tri":
+			self.image = image_tri
+			self.couleur = (180, 32, 42)
+			self.couleur2 = (59, 23, 37)
+			print(symb)
+			self.image_curseur = image_curseur_x
+		elif symb == "sq":
+			self.image = image_sq
+			self.couleur = (180, 32, 42)
+			self.couleur2 = (59, 23, 37)
+			print(symb)
+			self.image_curseur = image_curseur_x
 		else: 
 			# Valeurs par défaut
 			self.image = image_dot
@@ -348,8 +360,9 @@ class Jeu:
 					self.grille = Grille(3)
 					self.tour = 0
 					self.ini = False
+					self.time = 0
 
-				
+
 				choix = None
 				if self.jactuel.isAI:
 					choix = self.jactuel.jouer(self.grille)
@@ -381,6 +394,12 @@ class Jeu:
 			text = ""
 			if victoire:
 				text = f"{victoire} gagne!"
+				self.time += 1
+				print(self.time//60)
+				if self.time//60 == 5:
+					jeu = Jeu(j1, j2)
+					jeu.main()	
+
 			#textsurface = small_font.render(text, False, (0, 0, 0))
 			#screen.blit(textsurface,(0,0))
 
@@ -407,8 +426,14 @@ class Jeu:
 				liste_bouton = []
 				for n in range(n_symbole):
 					x_pos_symbole = (n+1)*gap+image_size*n
-					screen.blit(pygame.transform.scale(liste_symbole[n], image_res), (x_pos_symbole,y_pos_symbole))
 					liste_bouton.append(Bouton(n,(x_pos_symbole,y_pos_symbole),image_res))
+					if self.symbole_pris == n: #pin
+							screen.blit(pygame.transform.scale(image_dot, (image_res[0]*1.2,image_res[1]*1.2)), (x_pos_symbole-(image_res[0]*0.2)/2,y_pos_symbole-(image_res[0]*0.2)/2))
+					elif liste_bouton[n].est_survole() and self.symbole_pris != n:
+						screen.blit(pygame.transform.scale(liste_symbole[n], (image_res[0]*1.2,image_res[1]*1.2)), (x_pos_symbole-(image_res[0]*0.2)/2,y_pos_symbole-(image_res[0]*0.2)/2))
+					else:
+						screen.blit(pygame.transform.scale(liste_symbole[n], image_res), (x_pos_symbole,y_pos_symbole))
+
 					if liste_bouton[n].est_clique(clic_gauche) and self.symbole_pris != n:
 						
 						self.jactuel = self.joueurs[self.jactuel_index]
@@ -416,13 +441,7 @@ class Jeu:
 						self.jactuel_index = (self.jactuel_index+1)%2
 						self.fin_selection += 1	
 						self.symbole_pris = n
-					if liste_bouton[n].est_survole():
-						res = int(image_res[0]*1.2), int(image_res[1]*1.2)
-						pos = (x_pos_symbole-(image_res[0]*0.2)//2, y_pos_symbole-(image_res[0]*0.2)//2)
-						screen.blit(pygame.transform.scale(liste_symbole[n], res), pos)
-					else:
-						screen.blit(pygame.transform.scale(liste_symbole[n], image_res), (x_pos_symbole,y_pos_symbole))
-
+				
 						
 				#condition enlever menu
 				if self.fin_selection == len(liste_joueur):
@@ -476,9 +495,17 @@ animation_o.append(pygame.image.load('images/o_animation/o6.png'))
 animation_o.append(pygame.image.load('images/o_animation/o7.png'))
 animation_o.append(pygame.image.load('images/o_animation/o8.png'))
 
-animation_tri = animation_o 
 
-animation_sq = animation_o 
+animation_sq = []
+animation_sq.append(pygame.image.load('images/sq_animation/sq1.png'))
+animation_sq.append(pygame.image.load('images/sq_animation/sq2.png'))
+animation_sq.append(pygame.image.load('images/sq_animation/sq3.png'))
+animation_sq.append(pygame.image.load('images/sq_animation/sq4.png'))
+animation_sq.append(pygame.image.load('images/sq_animation/sq5.png'))
+animation_sq.append(pygame.image.load('images/sq_animation/sq6.png'))
+animation_sq.append(pygame.image.load('images/sq_animation/sq7.png'))
+
+animation_tri = animation_o 
 frame_actuelle = 0
 # Intéraction 
 clic_gauche = False
