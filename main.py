@@ -15,6 +15,16 @@ class Joueur:
 		self.nom = nom
 		self.symb = symb
 		self.isAI = False
+		
+		# Valeurs par défaut
+		self.image = image_dot
+		self.couleur = (205, 247, 226)
+		self.couleur2 = (33, 45, 72)
+		self.image_curseur = image_curseur
+
+	def initialiser(self, symb):
+		self.symb = symb
+		self.isAI = False
 		if symb == "x":
 			self.image = image_x
 			self.couleur = (50, 132, 100)
@@ -30,13 +40,13 @@ class Joueur:
 			self.couleur = (180, 32, 42)
 			self.couleur2 = (59, 23, 37)
 			print(symb)
-			self.image_curseur = image_curseur_x
+			self.image_curseur = image_curseur_tri
 		elif symb == "sq":
 			self.image = image_sq
 			self.couleur = (180, 32, 42)
 			self.couleur2 = (59, 23, 37)
 			print(symb)
-			self.image_curseur = image_curseur_x
+			self.image_curseur = image_curseur_sq
 		else: 
 			# Valeurs par défaut
 			self.image = image_dot
@@ -457,7 +467,8 @@ class Jeu:
 					if liste_bouton[n].est_clique(clic_gauche) and self.symbole_pris != n:
 						
 						self.jactuel = self.joueurs[self.jactuel_index]
-						self.jactuel.symb = liste_symbolestr[n]
+						self.jactuel.initialiser(liste_symbolestr[n])
+						
 						self.jactuel_index = (self.jactuel_index+1)%2
 						self.fin_selection += 1	
 						self.symbole_pris = n
@@ -485,6 +496,9 @@ screen = pygame.display.set_mode(taille_ecran)
 image_curseur = pygame.image.load("images/cursor.png")
 image_curseur_o = pygame.image.load("images/cursor_o.png")
 image_curseur_x = pygame.image.load("images/cursor_x.png")
+image_curseur_tri = pygame.image.load("images/cursor_tri.png")
+image_curseur_sq = pygame.image.load("images/cursor_sq.png")
+
 image_o = pygame.image.load("images/o.png")
 image_x = pygame.image.load("images/x.png")
 image_tri = pygame.image.load("images/tri.png")
@@ -539,7 +553,7 @@ j1_name = "j1"
 j2_name = "j2"
 j1 = Joueur("j1", "x")
 j2 = Joueur("j2", "o")
-j2 = IA_Joueur("j2", "o")
+#j2 = IA_Joueur("j2", "o")
 
 liste_joueur = ["j1","j2"]
 liste_symbole = [image_o,image_x,image_tri,image_sq]
