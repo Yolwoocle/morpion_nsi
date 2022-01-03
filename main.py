@@ -15,10 +15,44 @@ class Joueur:
 		self.nom = nom
 		self.symb = symb
 		self.isAI = False
-		self.str_curseur = ""
-		#on dit que par défaut c'est le curseur x qu'on changera ensuite.
-		self.image_curseur = image_curseur_x
+		
+		# Valeurs par défaut
+		self.image = image_dot
+		self.couleur = (205, 247, 226)
+		self.couleur2 = (33, 45, 72)
+		self.image_curseur = image_curseur
 
+	def initialiser(self, symb):
+		self.symb = symb
+		self.isAI = False
+		if symb == "x":
+			self.image = image_x
+			self.couleur = (50, 132, 100)
+			self.couleur2 = (18, 32, 32)
+			self.image_curseur = image_curseur_x
+		elif symb == "o":
+			self.image = image_o
+			self.couleur = (180, 32, 42)
+			self.couleur2 = (59, 23, 37)
+			self.image_curseur = image_curseur_o
+		elif symb == "tri":
+			self.image = image_tri
+			self.couleur = (180, 32, 42)
+			self.couleur2 = (59, 23, 37)
+			print(symb)
+			self.image_curseur = image_curseur_tri
+		elif symb == "sq":
+			self.image = image_sq
+			self.couleur = (180, 32, 42)
+			self.couleur2 = (59, 23, 37)
+			print(symb)
+			self.image_curseur = image_curseur_sq
+		else: 
+			# Valeurs par défaut
+			self.image = image_dot
+			self.couleur = (205, 247, 226)
+			self.couleur2 = (33, 45, 72)
+			self.image_curseur = image_curseur
 
 	def __str__(self):
 		return f"nom: {self.nom} \n symbole: {self.symb}"
@@ -30,19 +64,30 @@ class IA_Joueur(Joueur):
 		super().__init__(nom, symb)
 		self.difficulte = difficulte
 		self.isAI = True
-	
-	def jouer(self, grille):
-		#return random .grille
+
+	def symb_oppose(self, nom):
+		if nom == "j1":
+			return "j2"
+		return "j1"
+
+	def jouer(self, grille, tour):
+		choix_possibles = grille.cases_vides()
+		if len(choix_possibles) == 0:
+			return None
+		return random.choice(choix_possibles)
+		
 		self.choice = None
-		self.minimax(grille, self.symb)
+		self.minimax(grille, self.symb, tour)
 		return self.choice
 
-	def minimax(self, grille, symb):
+	def minimax(self, grille, symb, couche=0):
 		# Algorithme minimax récursif
 		moves = grille.cases_vides()
 		score = grille.score(symb)
 		if len(moves) == 0 or score != 0:
 			return grille.score(symb)
+		if couche >= 9:
+			return 0
 
 		scores = []
 
@@ -58,9 +103,11 @@ class IA_Joueur(Joueur):
 				#print(i)
 			#print("--------")
 			# TODO: adaptable à n nombre de joueurs
-			if symb == "*":
-				symb = self.symb
-			scores.append(self.minimax(grille_possible, "*"))
+			symb = self.symb_oppose(symb)
+			scores.append(self.minimax(grille_possible, symb, couche+1))
+
+		if couche < 5:
+			return 0
 
 		if symb == self.symb:
 			# Joueur maximisant
@@ -241,7 +288,8 @@ class Grille:
 							index_animation = i
        
 					offset = bouton.index[0] + 1.65 * bouton.index[1]
-					y += math.sin(pygame.time.get_ticks()/100 + offset) * 8
+					y += math.sin(pygame.time.get_ticks()/100 + offset) * 20
+
 					#print(str(case))
 					image = liste_symbole_animation[index_animation][int((round(pygame.time.get_ticks()/67))%len(liste_symbole_animation[index_animation]))]
 				screen.blit(pygame.transform.scale(image, image_res), (x, y))
@@ -274,7 +322,6 @@ class Cursor:
 				dist += self.width
 				pos = (self.pos[0] + crop[0] + ox*dist, self.pos[1] + crop[1] + oy*dist)
 				screen.blit(pygame.transform.scale(joueur.image_curseur, image_res), pos, crop)
-				print(joueur.str_curseur)
 
 ###################### JEU ######################
 class Jeu:
@@ -297,11 +344,13 @@ class Jeu:
 		self.fin_selection = 0
 		self.ini = True
 		self.symbole_pris = None
+
 	def joueur_actuel(self):
 		return self.jactuel
 
 	def tour_suivant(self):
 		self.tour += 1
+		print(self.tour)
 		self.jactuel_index += 1
 		self.jactuel_index %= len(self.joueurs)
 		self.jactuel = self.joueurs[self.jactuel_index]
@@ -330,6 +379,7 @@ class Jeu:
 			prev_time = now
 
             # On dessine la grille
+			screen.fill(blanc)
 			if not self.menu:
 				if self.ini:
 
@@ -340,7 +390,7 @@ class Jeu:
 					self.grille = Grille(3)
 					self.tour = 0 #pin
 					self.ini = False
-					self.time = 0
+					self.time = 5*60
 					for joueur in self.joueurs:
 						if joueur.symb == "x":
 							joueur.image = image_x
@@ -374,43 +424,46 @@ class Jeu:
 							joueur.image_curseur = image_curseur
 
 
-
+				# Choix
 				choix = None
 				if self.jactuel.isAI:
-					choix = self.jactuel.jouer(self.grille)
+					choix = self.jactuel.jouer(self.grille, self.tour)
 				else:
 					choix = self.grille.interaction_boutons(clic_gauche)
 				self.grille.animer_curseur(dt) 
 
+				if choix !=None:
+					pass
+					#print(choix)
 				if choix != None:
 					self.grille.changer_val(choix, self.jactuel.symb)
 					victoire = self.grille.victoire(self.tour)
 					self.tour_suivant()
-
-				screen.fill(blanc)
 
 			# Affichage du texte
 			text = ""
 			if victoire:
 				self.grille.cursor.visible = False
 				self.game_over = True
-				text = f"{victoire} gagne!"
+				text = f"{victoire} gagne! {self.time//60}"
 
 			# Affichage du texte
-			textsurface = small_font.render('Score : 5', False, (0, 0, 0))
-			screen.blit(textsurface,(0,0))
-
-			# Affichage du texte
-			text = ""
-			if victoire:
-				text = f"{victoire} gagne!"
-				self.time += 1
+			text = 'J' + str(self.jactuel_index + 1)
+			if victoire or self.tour == 9:
+				text += " gagne!" + str(self.time//60)
+				
+				self.time -=1
 				#print(self.time//60)
-				if self.time//60 == 5:
+				if self.time//60 == 0:
 					j1 = Joueur("j1", "x")
 					j2 = Joueur("j2", "o")
 					jeu = Jeu(j1, j2)
 					jeu.main()	
+
+			textsurface = small_font.render(text, False, (0, 0, 0))
+			screen.blit(textsurface,(0,0))
+
+			
 
 			#textsurface = small_font.render(text, False, (0, 0, 0))
 			#screen.blit(textsurface,(0,0))
@@ -419,10 +472,6 @@ class Jeu:
 			self.grille.afficher_grille(self.jactuel)
 			if victoire:
 				pass
-
-			# Affichage du texte
-			textsurface = small_font.render('Score : 5', False, (0, 0, 0))
-			screen.blit(textsurface,(0,0))
 			
 			# Menu
 			if self.menu == True:
@@ -454,17 +503,22 @@ class Jeu:
 				for n in range(n_symbole):
 					x_pos_symbole = (n+1)*gap+image_size*n
 					liste_bouton.append(Bouton(n,(x_pos_symbole,y_pos_symbole),image_res))
+					
+					new_res = (image_res[0]*1.2, image_res[1]*1.2)
+					new_res = ( int(new_res[0]), int(new_res[1]) )
+
 					if self.symbole_pris == n: #pin
-							screen.blit(pygame.transform.scale(image_dot, (image_res[0]*1.2,image_res[1]*1.2)), (x_pos_symbole-(image_res[0]*0.2)/2,y_pos_symbole-(image_res[0]*0.2)/2))
+						screen.blit(pygame.transform.scale(image_dot, new_res), (x_pos_symbole-(image_res[0]*0.2)/2, y_pos_symbole-(image_res[0]*0.2)/2))
 					elif liste_bouton[n].est_survole() and self.symbole_pris != n:
-						screen.blit(pygame.transform.scale(liste_symbole[n], (image_res[0]*1.2,image_res[1]*1.2)), (x_pos_symbole-(image_res[0]*0.2)/2,y_pos_symbole-(image_res[0]*0.2)/2))
+						screen.blit(pygame.transform.scale(liste_symbole[n], new_res), (x_pos_symbole-(image_res[0]*0.2)/2, y_pos_symbole-(image_res[0]*0.2)/2))
 					else:
 						screen.blit(pygame.transform.scale(liste_symbole[n], image_res), (x_pos_symbole,y_pos_symbole))
 
 					if liste_bouton[n].est_clique(clic_gauche) and self.symbole_pris != n:
 						
 						self.jactuel = self.joueurs[self.jactuel_index]
-						self.jactuel.symb = liste_symbolestr[n]
+						self.jactuel.initialiser(liste_symbolestr[n])
+						
 						self.jactuel_index = (self.jactuel_index+1)%2
 						self.fin_selection += 1	
 						self.symbole_pris = n
@@ -498,6 +552,9 @@ image_curseur_sq = pygame.image.load("images/cursor_sq.png")
 
 image_curseur_o = pygame.image.load("images/cursor_o.png")
 image_curseur_x = pygame.image.load("images/cursor_x.png")
+image_curseur_tri = pygame.image.load("images/cursor_tri.png")
+image_curseur_sq = pygame.image.load("images/cursor_sq.png")
+
 image_o = pygame.image.load("images/o.png")
 image_x = pygame.image.load("images/x.png")
 image_tri = pygame.image.load("images/tri.png")
@@ -566,6 +623,7 @@ j2_name = "j2"
 j1 = Joueur("j1", "x")
 j2 = Joueur("j2", "o")
 #j2 = IA_Joueur("j2", "o")
+
 liste_joueur = ["j1","j2"]
 liste_symbole = [image_o,image_x,image_tri,image_sq]
 liste_symbolestr = ['o','x','tri','sq']
