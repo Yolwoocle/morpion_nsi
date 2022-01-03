@@ -24,7 +24,6 @@ class Joueur:
 
 	def initialiser(self, symb):
 		self.symb = symb
-		self.isAI = False
 		if symb == "x":
 			self.image = image_x
 			self.couleur = (50, 132, 100)
@@ -64,6 +63,7 @@ class IA_Joueur(Joueur):
 		super().__init__(nom, symb)
 		self.difficulte = difficulte
 		self.isAI = True
+		self.timer = 0
 
 	def symb_oppose(self, nom):
 		if nom == "j1":
@@ -71,14 +71,31 @@ class IA_Joueur(Joueur):
 		return "j1"
 
 	def jouer(self, grille, tour):
-		choix_possibles = grille.cases_vides()
-		if len(choix_possibles) == 0:
-			return None
-		return random.choice(choix_possibles)
-		
-		self.choice = None
-		self.minimax(grille, self.symb, tour)
-		return self.choice
+		self.timer -= 1
+
+		if self.timer < 0:
+			self.timer = random.randint(20,50)
+
+			choix_possibles = grille.cases_vides()
+			
+			# Si on peut gagner, on le fait
+			for move in choix_possibles:
+				# TODO: c'est giga pas opti niveau mémoire
+				grille_possible = Grille(grille.n)
+				grille_possible.table = [i[:] for i in grille.table]
+				grille_possible.changer_val(move, self.symb)
+
+				if grille_possible.victoire() == self.symb:
+					return move
+
+			# Sinon, jouer un coin ou le centre à 33% de chance
+			if random.randint(1,3) == 1:
+				c = random.choice([(0,0),(2,2),(0,2),(2,0),(1,1)])
+				if c in choix_possibles:
+					return c
+
+			# Sinon, jouer aléatoirement
+			return random.choice(choix_possibles)
 
 	def minimax(self, grille, symb, couche=0):
 		# Algorithme minimax récursif
@@ -558,8 +575,8 @@ small_font = pygame.font.Font('font/8-bit-hud.ttf', 30)
 j1_name = "j1"
 j2_name = "j2"
 j1 = Joueur("j1", "x")
-j2 = Joueur("j2", "o")
-#j2 = IA_Joueur("j2", "o")
+#j2 = Joueur("j2", "o")
+j2 = IA_Joueur("j2", "o")
 
 liste_joueur = ["j1","j2"]
 liste_symbole = [image_o,image_x,image_tri,image_sq]
