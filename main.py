@@ -417,7 +417,9 @@ class Jeu:
 						self.fin_selection += 1	
 						self.symbole_pris = n
 					if liste_bouton[n].est_survole():
-						screen.blit(pygame.transform.scale(liste_symbole[n], (image_res[0]*1.2,image_res[1]*1.2)), (x_pos_symbole-(image_res[0]*0.2)/2,y_pos_symbole-(image_res[0]*0.2)/2))
+						res = int(image_res[0]*1.2), int(image_res[1]*1.2)
+						pos = (x_pos_symbole-(image_res[0]*0.2)//2, y_pos_symbole-(image_res[0]*0.2)//2)
+						screen.blit(pygame.transform.scale(liste_symbole[n], res), pos)
 					else:
 						screen.blit(pygame.transform.scale(liste_symbole[n], image_res), (x_pos_symbole,y_pos_symbole))
 
