@@ -344,7 +344,10 @@ class Cursor:
 class Jeu:
 	def __init__(self, joueur1, joueur2):
 		self.joueurs = [joueur1, joueur2]
-		
+
+		self.ia_onoff = ["On","Off"]
+		self.ia_test_index = 1
+
 		self.jactuel_index = 0
 		self.jactuel = self.joueurs[0]
 		self.tour = 1
@@ -364,6 +367,7 @@ class Jeu:
 
 	def tour_suivant(self):
 		self.tour += 1
+		print(self.tour)
 		self.jactuel_index += 1
 		self.jactuel_index %= len(self.joueurs)
 		self.jactuel = self.joueurs[self.jactuel_index]
@@ -401,9 +405,41 @@ class Jeu:
 					self.jactuel = self.joueurs[self.jactuel_index]
 					self.grille.afficher_grille(self.jactuel)
 					self.grille = Grille(3)
-					self.tour = 0
+					self.tour = 0 #pin
 					self.ini = False
-					self.time = 0
+					self.time = 5*60
+					for joueur in self.joueurs:
+						if joueur.symb == "x":
+							joueur.image = image_x
+							joueur.couleur = (50, 132, 100)
+							joueur.couleur2 = (18, 32, 32)
+							joueur.image_curseur = image_curseur_x
+							joueur.str_curseur = "x"
+						elif joueur.symb == "o":
+							joueur.image = image_o
+							joueur.couleur = (180, 32, 42)
+							joueur.couleur2 = (59, 23, 37)
+							joueur.image_curseur = image_curseur_o
+							joueur.str_curseur = "o"
+						elif joueur.symb == "tri":
+							joueur.image = image_tri
+							joueur.couleur = (180, 32, 42)
+							joueur.couleur2 = (59, 23, 37)
+							joueur.image_curseur = image_curseur_tri
+							joueur.str_curseur = "tri"
+						elif joueur.symb == "sq":
+							joueur.image = image_sq
+							joueur.couleur = (180, 32, 42)
+							joueur.couleur2 = (59, 23, 37)
+							joueur.image_curseur = image_curseur_sq
+							joueur.str_curseur = "sq"
+						else: 
+							# Valeurs par défaut
+							joueur.image = image_dot
+							joueur.couleur = (205, 247, 226)
+							joueur.couleur2 = (33, 45, 72)
+							joueur.image_curseur = image_curseur
+
 
 				# Choix
 				choix = None
@@ -427,19 +463,22 @@ class Jeu:
 			if victoire:
 				self.grille.cursor.visible = False
 				self.game_over = True
-				text = f"{victoire} gagne!"
+				text = f"{victoire} gagne! {self.time//60}"
 
 			# Affichage du texte
 			text = 'J' + str(self.jactuel_index + 1)
-			if victoire:
-				text += " gagne!"
+			if victoire or self.tour == 9:
+				text += " gagne!" + str(self.time//60)
+				
 				
 				if self.time == 0:
 					sfx_win.play()
+				self.time -=1
 
-				self.time += 1
 				#print(self.time//60)
-				if self.time//60 == 5:
+				if self.time//60 == 0:
+					j1 = Joueur("j1", "x")
+					j2 = Joueur("j2", "o")
 					jeu = Jeu(j1, j2)
 					jeu.main()	
 
@@ -461,11 +500,26 @@ class Jeu:
 				selection = small_font.render(text_selection, False, noir)
 				selection_x = (l_ecran - small_font.size(text_selection )[0])/2
 				screen.blit(selection,(selection_x,0))
+
+				#affichage texte I.A on/off
+				text_ia = "I.A : " + self.ia_onoff[self.ia_test_index]
+				#print(self.ia_test_index)
+				selection = small_font.render(text_ia, False, noir)
+				selection_x = (l_ecran - small_font.size(text_ia )[0])/2
+				selection_y = (h_ecran - small_font.size(text_ia)[1])
+				screen.blit(selection,(selection_x,selection_y))
+
 				#affichage des symboles
 				
 				gap = (l_ecran - n_symbole*image_size)/(n_symbole+1)
 				y_pos_symbole = (h_ecran-image_size)/2
 				liste_bouton = []
+				bouton_ia_x, bouton_ia_y  = (l_ecran)/2-30, h_ecran-image_size-40 #brut
+				bouton_ia = Bouton(1,(bouton_ia_x,bouton_ia_y),image_res)
+				screen.blit(pygame.transform.scale(image_dot, image_res),(bouton_ia_x,bouton_ia_y))
+				if bouton_ia.est_clique(clic_gauche):
+					self.ia_test_index = (self.ia_test_index+1)%2 #si cliqué, ça fait off ou on mode ia
+				
 				for n in range(n_symbole):
 					x_pos_symbole = (n+1)*gap+image_size*n
 					liste_bouton.append(Bouton(n,(x_pos_symbole,y_pos_symbole),image_res))
@@ -493,8 +547,11 @@ class Jeu:
 						
 				#condition enlever menu
 				if self.fin_selection == len(liste_joueur):
+					#si le mode ia est on, le joueur 2 est l'IA
+					if self.ia_onoff[self.ia_test_index] == "On":
+						j2 = IA_Joueur("j2",self.joueurs[1].symb)
+						self.joueurs[1] = j2
 					self.menu = False
-
 			# On affiche tout sur l'écran 
 			pygame.display.flip()
 
@@ -511,6 +568,9 @@ screen = pygame.display.set_mode(taille_ecran)
 
 # Importation des images
 image_curseur = pygame.image.load("images/cursor.png")
+image_curseur_tri = pygame.image.load("images/cursor_tri.png")
+image_curseur_sq = pygame.image.load("images/cursor_sq.png")
+
 image_curseur_o = pygame.image.load("images/cursor_o.png")
 image_curseur_x = pygame.image.load("images/cursor_x.png")
 image_curseur_tri = pygame.image.load("images/cursor_tri.png")
@@ -548,6 +608,7 @@ animation_o.append(pygame.image.load('images/o_animation/o8.png'))
 
 
 animation_sq = []
+animation_sq.append(pygame.image.load('images/sq_animation/sq0.png'))
 animation_sq.append(pygame.image.load('images/sq_animation/sq1.png'))
 animation_sq.append(pygame.image.load('images/sq_animation/sq2.png'))
 animation_sq.append(pygame.image.load('images/sq_animation/sq3.png'))
@@ -556,13 +617,25 @@ animation_sq.append(pygame.image.load('images/sq_animation/sq5.png'))
 animation_sq.append(pygame.image.load('images/sq_animation/sq6.png'))
 animation_sq.append(pygame.image.load('images/sq_animation/sq7.png'))
 
+animation_tri = []
+animation_tri.append(pygame.image.load('images/tri_animation/tri1.png'))
+animation_tri.append(pygame.image.load('images/tri_animation/tri2.png'))
+animation_tri.append(pygame.image.load('images/tri_animation/tri3.png'))
+animation_tri.append(pygame.image.load('images/tri_animation/tri4.png'))
+animation_tri.append(pygame.image.load('images/tri_animation/tri5.png'))
+animation_tri.append(pygame.image.load('images/tri_animation/tri6.png'))
+animation_tri.append(pygame.image.load('images/tri_animation/tri7.png'))
+animation_tri.append(pygame.image.load('images/tri_animation/tri8.png'))
+animation_tri.append(pygame.image.load('images/tri_animation/tri9.png'))
+
+
+
 # Sons
 pygame.mixer.init()
 sfx_place = pygame.mixer.Sound('sfx/place.mp3')
 sfx_win = pygame.mixer.Sound('sfx/win.mp3')
 
 
-animation_tri = animation_o 
 frame_actuelle = 0
 # Intéraction 
 clic_gauche = False
