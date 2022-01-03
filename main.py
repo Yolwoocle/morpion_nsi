@@ -54,19 +54,30 @@ class IA_Joueur(Joueur):
 		super().__init__(nom, symb)
 		self.difficulte = difficulte
 		self.isAI = True
-	
-	def jouer(self, grille):
-		return random. grille
+
+	def symb_oppose(self, nom):
+		if nom == "j1":
+			return "j2"
+		return "j1"
+
+	def jouer(self, grille, tour):
+		choix_possibles = grille.cases_vides()
+		if len(choix_possibles) == 0:
+			return None
+		return random.choice(choix_possibles)
+		
 		self.choice = None
-		self.minimax(grille, self.symb)
+		self.minimax(grille, self.symb, tour)
 		return self.choice
 
-	def minimax(self, grille, symb):
+	def minimax(self, grille, symb, couche=0):
 		# Algorithme minimax récursif
 		moves = grille.cases_vides()
 		score = grille.score(symb)
 		if len(moves) == 0 or score != 0:
 			return grille.score(symb)
+		if couche >= 9:
+			return 0
 
 		scores = []
 
@@ -82,9 +93,11 @@ class IA_Joueur(Joueur):
 				#print(i)
 			#print("--------")
 			# TODO: adaptable à n nombre de joueurs
-			if symb == "*":
-				symb = self.symb
-			scores.append(self.minimax(grille_possible, "*"))
+			symb = self.symb_oppose(symb)
+			scores.append(self.minimax(grille_possible, symb, couche+1))
+
+		if couche < 5:
+			return 0
 
 		if symb == self.symb:
 			# Joueur maximisant
@@ -265,8 +278,9 @@ class Grille:
 							index_animation = i
        
 					offset = bouton.index[0] + 1.65 * bouton.index[1]
-					y += math.sin(pygame.time.get_ticks()/100 + offset) * 8
-					print(str(case))
+					y += math.sin(pygame.time.get_ticks()/100 + offset) * 20
+
+					#print(str(case))
 					image = liste_symbole_animation[index_animation][int((round(pygame.time.get_ticks()/67))%len(liste_symbole_animation[index_animation]))]
 				screen.blit(pygame.transform.scale(image, image_res), (x, y))
 		# Afficher curseur
@@ -317,6 +331,7 @@ class Jeu:
 		self.fin_selection = 0
 		self.ini = True
 		self.symbole_pris = None
+
 	def joueur_actuel(self):
 		return self.jactuel
 
@@ -349,7 +364,11 @@ class Jeu:
 			dt = now - prev_time
 			prev_time = now
 
+			print(self.jactuel.symb)
+			print(self.grille.table)
+
             # On dessine la grille
+			screen.fill(blanc)
 			if not self.menu:
 				if self.ini:
 
@@ -362,22 +381,21 @@ class Jeu:
 					self.ini = False
 					self.time = 0
 
-
+				# Choix
 				choix = None
 				if self.jactuel.isAI:
-					choix = self.jactuel.jouer(self.grille)
+					choix = self.jactuel.jouer(self.grille, self.tour)
 				else:
 					choix = self.grille.interaction_boutons(clic_gauche)
 				self.grille.animer_curseur(dt) 
 
 				if choix !=None:
-					print(choix)
+					pass
+					#print(choix)
 				if choix != None:
 					self.grille.changer_val(choix, self.jactuel.symb)
 					victoire = self.grille.victoire(self.tour)
 					self.tour_suivant()
-
-				screen.fill(blanc)
 
 			# Affichage du texte
 			text = ""
@@ -387,18 +405,20 @@ class Jeu:
 				text = f"{victoire} gagne!"
 
 			# Affichage du texte
-			textsurface = small_font.render('Score : 5', False, (0, 0, 0))
-			screen.blit(textsurface,(0,0))
-
-			# Affichage du texte
-			text = ""
+			text = 'J' + str(self.jactuel_index + 1)
 			if victoire:
-				text = f"{victoire} gagne!"
+				text += " gagne!"
+				
 				self.time += 1
-				print(self.time//60)
+				#print(self.time//60)
 				if self.time//60 == 5:
 					jeu = Jeu(j1, j2)
 					jeu.main()	
+
+			textsurface = small_font.render(text, False, (0, 0, 0))
+			screen.blit(textsurface,(0,0))
+
+			
 
 			#textsurface = small_font.render(text, False, (0, 0, 0))
 			#screen.blit(textsurface,(0,0))
@@ -407,10 +427,6 @@ class Jeu:
 			self.grille.afficher_grille(self.jactuel)
 			if victoire:
 				pass
-
-			# Affichage du texte
-			textsurface = small_font.render('Score : 5', False, (0, 0, 0))
-			screen.blit(textsurface,(0,0))
 			
 			# Menu
 			if self.menu == True:
@@ -427,10 +443,14 @@ class Jeu:
 				for n in range(n_symbole):
 					x_pos_symbole = (n+1)*gap+image_size*n
 					liste_bouton.append(Bouton(n,(x_pos_symbole,y_pos_symbole),image_res))
+					
+					new_res = (image_res[0]*1.2, image_res[1]*1.2)
+					new_res = ( int(new_res[0]), int(new_res[1]) )
+
 					if self.symbole_pris == n: #pin
-							screen.blit(pygame.transform.scale(image_dot, (image_res[0]*1.2,image_res[1]*1.2)), (x_pos_symbole-(image_res[0]*0.2)/2,y_pos_symbole-(image_res[0]*0.2)/2))
+						screen.blit(pygame.transform.scale(image_dot, new_res), (x_pos_symbole-(image_res[0]*0.2)/2, y_pos_symbole-(image_res[0]*0.2)/2))
 					elif liste_bouton[n].est_survole() and self.symbole_pris != n:
-						screen.blit(pygame.transform.scale(liste_symbole[n], (image_res[0]*1.2,image_res[1]*1.2)), (x_pos_symbole-(image_res[0]*0.2)/2,y_pos_symbole-(image_res[0]*0.2)/2))
+						screen.blit(pygame.transform.scale(liste_symbole[n], new_res), (x_pos_symbole-(image_res[0]*0.2)/2, y_pos_symbole-(image_res[0]*0.2)/2))
 					else:
 						screen.blit(pygame.transform.scale(liste_symbole[n], image_res), (x_pos_symbole,y_pos_symbole))
 
@@ -519,7 +539,8 @@ j1_name = "j1"
 j2_name = "j2"
 j1 = Joueur("j1", "x")
 j2 = Joueur("j2", "o")
-#j2 = IA_Joueur("j2", "o")
+j2 = IA_Joueur("j2", "o")
+
 liste_joueur = ["j1","j2"]
 liste_symbole = [image_o,image_x,image_tri,image_sq]
 liste_symbolestr = ['o','x','tri','sq']
