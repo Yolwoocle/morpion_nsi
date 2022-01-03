@@ -407,8 +407,14 @@ class Jeu:
 				liste_bouton = []
 				for n in range(n_symbole):
 					x_pos_symbole = (n+1)*gap+image_size*n
-					screen.blit(pygame.transform.scale(liste_symbole[n], image_res), (x_pos_symbole,y_pos_symbole))
 					liste_bouton.append(Bouton(n,(x_pos_symbole,y_pos_symbole),image_res))
+					if self.symbole_pris == n: #pin
+							screen.blit(pygame.transform.scale(image_dot, (image_res[0]*1.2,image_res[1]*1.2)), (x_pos_symbole-(image_res[0]*0.2)/2,y_pos_symbole-(image_res[0]*0.2)/2))
+					elif liste_bouton[n].est_survole() and self.symbole_pris != n:
+						screen.blit(pygame.transform.scale(liste_symbole[n], (image_res[0]*1.2,image_res[1]*1.2)), (x_pos_symbole-(image_res[0]*0.2)/2,y_pos_symbole-(image_res[0]*0.2)/2))
+					else:
+						screen.blit(pygame.transform.scale(liste_symbole[n], image_res), (x_pos_symbole,y_pos_symbole))
+
 					if liste_bouton[n].est_clique(clic_gauche) and self.symbole_pris != n:
 						
 						self.jactuel = self.joueurs[self.jactuel_index]
@@ -416,11 +422,7 @@ class Jeu:
 						self.jactuel_index = (self.jactuel_index+1)%2
 						self.fin_selection += 1	
 						self.symbole_pris = n
-					if liste_bouton[n].est_survole():
-						screen.blit(pygame.transform.scale(liste_symbole[n], (image_res[0]*1.2,image_res[1]*1.2)), (x_pos_symbole-(image_res[0]*0.2)/2,y_pos_symbole-(image_res[0]*0.2)/2))
-					else:
-						screen.blit(pygame.transform.scale(liste_symbole[n], image_res), (x_pos_symbole,y_pos_symbole))
-
+				
 						
 				#condition enlever menu
 				if self.fin_selection == len(liste_joueur):
