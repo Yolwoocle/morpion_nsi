@@ -38,13 +38,13 @@ class Joueur:
 			self.image = image_tri
 			self.couleur = (180, 32, 42)
 			self.couleur2 = (59, 23, 37)
-			print(symb)
+		
 			self.image_curseur = image_curseur_tri
 		elif symb == "sq":
 			self.image = image_sq
 			self.couleur = (180, 32, 42)
 			self.couleur2 = (59, 23, 37)
-			print(symb)
+	
 			self.image_curseur = image_curseur_sq
 		else: 
 			# Valeurs par défaut
@@ -367,7 +367,6 @@ class Jeu:
 
 	def tour_suivant(self):
 		self.tour += 1
-		print(self.tour)
 		self.jactuel_index += 1
 		self.jactuel_index %= len(self.joueurs)
 		self.jactuel = self.joueurs[self.jactuel_index]
@@ -519,7 +518,7 @@ class Jeu:
 				screen.blit(pygame.transform.scale(image_dot, image_res),(bouton_ia_x,bouton_ia_y))
 				if bouton_ia.est_clique(clic_gauche):
 					self.ia_test_index = (self.ia_test_index+1)%2 #si cliqué, ça fait off ou on mode ia
-				
+					print(self.ia_test_index)
 				for n in range(n_symbole):
 					x_pos_symbole = (n+1)*gap+image_size*n
 					liste_bouton.append(Bouton(n,(x_pos_symbole,y_pos_symbole),image_res))
@@ -549,8 +548,10 @@ class Jeu:
 				if self.fin_selection == len(liste_joueur):
 					#si le mode ia est on, le joueur 2 est l'IA
 					if self.ia_onoff[self.ia_test_index] == "On":
+						print("on")
 						j2 = IA_Joueur("j2",self.joueurs[1].symb)
 						self.joueurs[1] = j2
+
 					self.menu = False
 			# On affiche tout sur l'écran 
 			pygame.display.flip()
@@ -648,8 +649,8 @@ small_font = pygame.font.Font('font/8-bit-hud.ttf', 30)
 j1_name = "j1"
 j2_name = "j2"
 j1 = Joueur("j1", "x")
-#j2 = Joueur("j2", "o")
-j2 = IA_Joueur("j2", "o")
+j2 = Joueur("j2", "o")
+
 
 liste_joueur = ["j1","j2"]
 liste_symbole = [image_o,image_x,image_tri,image_sq]
