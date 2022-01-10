@@ -89,10 +89,9 @@ class IA_Joueur(Joueur):
 					return move
 
 			# Sinon, jouer un coin ou le centre à 33% de chance
-			if random.randint(1,3) == 1:
-				c = random.choice([(0,0),(2,2),(0,2),(2,0),(1,1)])
-				if c in choix_possibles:
-					return c
+			c = random.choice([(0,0),(2,2),(0,2),(2,0),(1,1)])
+			if c in choix_possibles:
+				return c
 
 			# Sinon, jouer aléatoirement
 			return random.choice(choix_possibles)
