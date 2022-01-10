@@ -88,6 +88,17 @@ class IA_Joueur(Joueur):
 				if grille_possible.victoire() == self.symb:
 					return move
 
+			
+			# L'autre gagne, on le bloque
+			for move in choix_possibles:
+				# TODO: c'est giga pas opti niveau mémoire
+				grille_possible = Grille(grille.n)
+				grille_possible.table = [i[:] for i in grille.table]
+				grille_possible.changer_val(move, self.symb)
+
+				if grille_possible.victoire() != self.symb:
+					return move
+
 			# Sinon, jouer un coin ou le centre à 33% de chance
 			c = random.choice([(0,0),(2,2),(0,2),(2,0),(1,1)])
 			if c in choix_possibles:
