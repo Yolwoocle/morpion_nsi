@@ -70,7 +70,7 @@ class IA_Joueur(Joueur):
 			return "j2"
 		return "j1"
 
-	def jouer(self, grille, tour):
+	def jouer(self, grille, tour, ennemi_symb):
 		self.timer -= 1
 
 		if self.timer < 0:
@@ -94,7 +94,7 @@ class IA_Joueur(Joueur):
 				# TODO: c'est giga pas opti niveau mémoire
 				grille_possible = Grille(grille.n)
 				grille_possible.table = [i[:] for i in grille.table]
-				grille_possible.changer_val(move, self.symb)
+				grille_possible.changer_val(move, ennemi_symb)
 
 				if grille_possible.victoire() != self.symb:
 					return move
@@ -453,7 +453,7 @@ class Jeu:
 				# Choix
 				choix = None
 				if self.jactuel.isAI:
-					choix = self.jactuel.jouer(self.grille, self.tour)
+					choix = self.jactuel.jouer(self.grille, self.tour, self.joueurs[(self.jactuel+1)%2].symb)
 				else:
 					choix = self.grille.interaction_boutons(clic_gauche)
 				self.grille.animer_curseur(dt) 
