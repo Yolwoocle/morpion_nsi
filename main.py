@@ -70,14 +70,15 @@ class IA_Joueur(Joueur):
 			return "j2"
 		return "j1"
 
-	def jouer(self, grille, tour, ennemi_symb):
+	def jouer(self, grille, tour, enemi_symb):
 		self.timer -= 1
 
 		if self.timer < 0:
 			self.timer = random.randint(20,50)
 
 			choix_possibles = grille.cases_vides()
-			
+			print("choix possibles", choix_possibles)
+
 			# Si on peut gagner, on le fait
 			for move in choix_possibles:
 				# TODO: c'est giga pas opti niveau mémoire
@@ -85,6 +86,7 @@ class IA_Joueur(Joueur):
 				grille_possible.table = [i[:] for i in grille.table]
 				grille_possible.changer_val(move, self.symb)
 
+				print(move, grille_possible.table, "victoire grille", grille_possible.victoire())
 				if grille_possible.victoire() == self.symb:
 					return move
 
@@ -94,18 +96,19 @@ class IA_Joueur(Joueur):
 				# TODO: c'est giga pas opti niveau mémoire
 				grille_possible = Grille(grille.n)
 				grille_possible.table = [i[:] for i in grille.table]
-				grille_possible.changer_val(move, ennemi_symb)
+				grille_possible.changer_val(move, enemi_symb)
+				print(grille.table)
 
-				if grille_possible.victoire() != self.symb:
+				if grille_possible.victoire() == enemi_symb:
 					return move
 
 			# Sinon, jouer un coin ou le centre à 33% de chance
 			c = random.choice([(0,0),(2,2),(0,2),(2,0),(1,1)])
-			if c in choix_possibles:
+			if c in choix_possibles and random.choice([1,2,3])==1:
 				return c
 
 			# Sinon, jouer aléatoirement
-			return random.choice(choix_possibles)
+			return choix_possibles[random.randint(0, len(choix_possibles)-1)]
 
 	def minimax(self, grille, symb, couche=0):
 		# Algorithme minimax récursif
@@ -453,7 +456,7 @@ class Jeu:
 				# Choix
 				choix = None
 				if self.jactuel.isAI:
-					choix = self.jactuel.jouer(self.grille, self.tour, self.joueurs[(self.jactuel+1)%2].symb)
+					choix = self.jactuel.jouer(self.grille, self.tour, self.joueurs[(self.jactuel_index+1)%2].symb)
 				else:
 					choix = self.grille.interaction_boutons(clic_gauche)
 				self.grille.animer_curseur(dt) 
